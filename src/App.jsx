@@ -474,3 +474,4 @@ export default function App() {
       <div className="hidden lg:block absolute inset-0 z-0 overflow-hidden">
          <div className="absolute inset-0 bg-gradient-to-br from-[#3A7D44]/5 to-[#F4D03F]/5"></div>
          <div className="absolute top-0 left-0 w
+         
