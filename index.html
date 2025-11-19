@@ -3,334 +3,265 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BeeCup - Taze & Sağlıklı</title>
+    <title>BeeCup - Ofisinizdeki Akıllı Mola</title>
     
-    <!-- 1. BOYA KUTUSU (Tailwind CSS) -->
     <script src="https://cdn.tailwindcss.com"></script>
     
-    <!-- 2. İKON KUTUSU (Lucide Icons) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    
     <script src="https://unpkg.com/lucide@latest"></script>
-    
-    <!-- 3. YAZI TİPİ -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
-    
+
     <style>
         body { font-family: 'Inter', sans-serif; }
-        /* Animasyonlar */
-        @keyframes fade-in-up { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        .animate-fade-in-up { animation: fade-in-up 0.6s ease-out forwards; }
-        .animate-bounce-slow { animation: bounce 3s infinite; }
-        @keyframes bounce { 0%, 100% { transform: translateY(-5%); } 50% { transform: translateY(0); } }
+        .hero-bg { background: linear-gradient(to right, #f0fdf4, #ffffff); }
+        .blob { position: absolute; filter: blur(40px); z-index: -1; opacity: 0.5; }
     </style>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        bee: {
+                            yellow: '#FFC107',
+                            green: '#4CAF50',
+                            dark: '#1F2937'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
 </head>
-<body class="font-sans text-gray-800 bg-white">
+<body class="bg-gray-50 text-gray-800">
 
-    <!-- NAVBAR -->
-    <nav class="fixed top-0 w-full bg-white/90 backdrop-blur-md z-50 border-b border-lime-100">
+    <nav class="bg-white/80 backdrop-blur-md fixed w-full z-50 border-b border-gray-100">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-20">
-                <!-- Logo -->
-                <div class="flex items-center gap-2">
-                    <div class="w-10 h-10 bg-lime-500 rounded-full flex items-center justify-center text-white shadow-md">
-                        <i data-lucide="leaf" class="w-5 h-5 text-white"></i>
+            <div class="flex justify-between h-20 items-center">
+                <div class="flex items-center gap-2 cursor-pointer" onclick="window.scrollTo(0,0)">
+                    <div class="w-10 h-10 bg-bee-yellow rounded-full flex items-center justify-center text-white font-bold shadow-lg">
+                        <i data-lucide="hexagon" class="w-6 h-6"></i>
                     </div>
-                    <span class="text-2xl font-bold text-lime-900 tracking-tight">BeeCup</span>
+                    <span class="font-bold text-2xl tracking-tight text-bee-green">BeeCup</span>
                 </div>
-
-                <!-- Desktop Menu -->
-                <div class="hidden md:flex items-center gap-8">
-                    <a href="#nasil-calisir" class="text-gray-600 hover:text-lime-600 font-medium transition">Nasıl Çalışır?</a>
-                    <a href="#menu" class="text-gray-600 hover:text-lime-600 font-medium transition">Menü</a>
-                    <a href="#app" class="text-gray-600 hover:text-lime-600 font-medium transition">Uygulama</a>
-                    <a href="#iletisim" class="bg-lime-500 text-white px-5 py-2.5 rounded-full font-bold hover:bg-lime-600 transition shadow-lg shadow-lime-200">
-                        Kurumsal Başvuru
+                
+                <div class="hidden md:flex space-x-8 items-center">
+                    <a href="#ozellikler" class="text-gray-600 hover:text-bee-green font-medium transition">Nasıl Çalışır?</a>
+                    <a href="#menu" class="text-gray-600 hover:text-bee-green font-medium transition">Menü</a>
+                    <a href="#surdurulebilirlik" class="text-gray-600 hover:text-bee-green font-medium transition">Sürdürülebilirlik</a>
+                    <a href="#contact" class="bg-bee-green text-white px-6 py-2 rounded-full font-medium hover:bg-green-700 transition shadow-lg transform hover:scale-105">
+                        App İndir
                     </a>
                 </div>
-
-                <!-- Mobile Menu Button -->
-                <button onclick="toggleMenu()" class="md:hidden text-gray-600">
-                    <i data-lucide="menu" id="menuIcon" class="w-7 h-7"></i>
-                </button>
-            </div>
-        </div>
-
-        <!-- Mobile Menu Dropdown -->
-        <div id="mobileMenu" class="hidden md:hidden bg-white border-t border-gray-100 absolute w-full p-4 shadow-lg">
-            <div class="flex flex-col gap-4">
-                <a href="#nasil-calisir" class="text-lg font-medium text-gray-700" onclick="toggleMenu()">Nasıl Çalışır?</a>
-                <a href="#menu" class="text-lg font-medium text-gray-700" onclick="toggleMenu()">Menü</a>
-                <a href="#app" class="text-lg font-medium text-gray-700" onclick="toggleMenu()">Uygulama</a>
-                <a href="#iletisim" class="bg-lime-500 text-white px-4 py-3 rounded-xl text-center font-bold" onclick="toggleMenu()">Kurumsal Başvuru</a>
             </div>
         </div>
     </nav>
 
-    <!-- HERO SECTION -->
-    <section class="pt-32 pb-20 lg:pt-40 lg:pb-32 bg-gradient-to-b from-lime-50 to-white overflow-hidden">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-                <div class="z-10">
-                    <div class="inline-flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm border border-lime-100 mb-6 animate-fade-in-up">
-                        <span class="w-2 h-2 bg-lime-500 rounded-full animate-pulse"></span>
-                        <span class="text-sm font-bold text-lime-800">İstanbul'un En Taze Otomatı</span>
+    <header class="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden hero-bg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="lg:w-1/2">
+                <div class="inline-flex items-center px-3 py-1 rounded-full bg-yellow-100 text-yellow-800 text-sm font-semibold mb-6 shadow-sm">
+                    <span class="mr-2">🚀</span> Levent ve Maslak Plazalarında Yayında!
+                </div>
+                <h1 class="text-5xl lg:text-6xl font-extrabold text-gray-900 leading-tight mb-6">
+                    Ofisinizdeki <br>
+                    <span class="text-bee-green">Sağlıklı</span> ve <span class="text-bee-yellow">Hızlı</span> Mola.
+                </h1>
+                <p class="text-xl text-gray-600 mb-8 leading-relaxed max-w-lg">
+                    BeeCup Akıllı Yemek Otomatı ile taze bowl, wrap ve salatalara 7/24 ulaşın. Sıra bekleme yok, QR ile öde ve enerjini topla.
+                </p>
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <button class="flex items-center justify-center bg-bee-green text-white px-8 py-4 rounded-xl font-bold text-lg hover:bg-green-700 transition shadow-xl">
+                        Hemen Keşfet <i data-lucide="chevron-right" class="ml-2 w-5 h-5"></i>
+                    </button>
+                    <button class="flex items-center justify-center bg-white text-gray-700 border-2 border-gray-200 px-8 py-4 rounded-xl font-bold text-lg hover:border-bee-green hover:text-bee-green transition">
+                        Kurumsal Başvuru
+                    </button>
+                </div>
+                
+                <div class="mt-10 grid grid-cols-3 gap-4 border-t pt-8 border-gray-200">
+                    <div>
+                        <span class="block text-2xl font-bold text-gray-900">4°C</span>
+                        <span class="text-sm text-gray-500">Tazelik Garantisi</span>
                     </div>
-                    <h1 class="text-5xl lg:text-7xl font-bold text-gray-900 leading-tight mb-6">
-                        Sağlıklı Yemek <br/>
-                        <span class="text-lime-600">Tek Tuşla Yanında.</span>
-                    </h1>
-                    <p class="text-lg text-gray-600 mb-8 max-w-lg leading-relaxed">
-                        Plaza hayatının koşturmacasında sağlıklı beslenmek artık zor değil. BeeCup, taze bowl, wrap ve salataları 7/24 ofisine getiriyor.
-                    </p>
-                    <div class="flex flex-col sm:flex-row gap-4">
-                        <button class="bg-lime-600 text-white px-8 py-4 rounded-full font-bold text-lg shadow-xl shadow-lime-200 hover:bg-lime-700 transition flex items-center justify-center gap-2">
-                            Hemen İncele <i data-lucide="arrow-right" class="w-5 h-5"></i>
-                        </button>
-                        <button class="bg-white text-gray-700 border border-gray-200 px-8 py-4 rounded-full font-bold text-lg hover:bg-gray-50 transition flex items-center justify-center gap-2">
-                            <i data-lucide="smartphone" class="w-5 h-5"></i> Uygulamayı İndir
-                        </button>
+                    <div>
+                        <span class="block text-2xl font-bold text-gray-900">109+</span>
+                        <span class="text-sm text-gray-500">Günlük Satış</span>
+                    </div>
+                    <div>
+                        <span class="block text-2xl font-bold text-gray-900">%100</span>
+                        <span class="text-sm text-gray-500">Geri Dönüştürülebilir</span>
                     </div>
                 </div>
-                <div class="relative">
-                    <div class="absolute -top-20 -right-20 w-96 h-96 bg-yellow-300 rounded-full opacity-20 blur-3xl animate-pulse"></div>
-                    <div class="absolute -bottom-20 -left-20 w-96 h-96 bg-lime-400 rounded-full opacity-20 blur-3xl"></div>
-                    <img 
-                        src="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80" 
-                        alt="Healthy Bowl" 
-                        class="relative z-10 w-full rounded-3xl shadow-2xl transform hover:scale-105 transition duration-500 border-8 border-white"
-                    />
-                    <!-- Floating Badge -->
-                    <div class="absolute bottom-10 -left-6 bg-white p-4 rounded-2xl shadow-xl z-20 flex items-center gap-3 animate-bounce-slow">
-                        <div class="bg-green-100 p-3 rounded-full text-green-600">
-                            <i data-lucide="recycle" class="w-6 h-6"></i>
+            </div>
+        </div>
+        
+        <div class="hidden lg:block absolute top-0 right-0 w-1/2 h-full bg-green-50/50 rounded-l-[3rem]">
+            <div class="absolute inset-0 flex items-center justify-center">
+                <div class="relative w-80 h-[500px] bg-gray-900 rounded-[2rem] shadow-2xl border-8 border-gray-800 flex flex-col overflow-hidden">
+                    <div class="h-full w-full bg-gray-800 relative">
+                        <div class="absolute top-10 left-1/2 transform -translate-x-1/2 w-64 h-32 bg-bee-green/20 rounded-lg flex items-center justify-center">
+                            <span class="text-bee-green font-bold animate-pulse">BeeCup 21.5" Ekran</span>
                         </div>
-                        <div>
-                            <p class="text-xs text-gray-500 font-bold uppercase">Sürdürülebilir</p>
-                            <p class="text-lg font-bold text-gray-800">%100 Geri Dönüşüm</p>
+                        <div class="absolute top-48 left-4 right-4 space-y-4">
+                            <div class="h-12 bg-white/10 rounded w-full"></div>
+                            <div class="h-12 bg-white/10 rounded w-full"></div>
+                            <div class="h-12 bg-white/10 rounded w-full"></div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </section>
+    </header>
 
-    <!-- FEATURES -->
-    <section id="nasil-calisir" class="py-20 bg-white">
+    <section id="ozellikler" class="py-20 bg-white">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-16">
-                <h2 class="text-3xl font-bold text-gray-900 mb-4">Neden BeeCup?</h2>
-                <p class="text-gray-500 max-w-2xl mx-auto">Sadece bir otomat değil, ofisinizdeki kişisel şefiniz ve sürdürülebilirlik partneriniz.</p>
+                <h2 class="text-3xl font-bold text-gray-900">Neden BeeCup?</h2>
+                <p class="mt-4 text-gray-600 max-w-2xl mx-auto">Plaza çalışanlarının ihtiyaçlarını analiz ettik. Hız, sağlık ve sürdürülebilirliği tek bir otomatta birleştirdik.</p>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <!-- Feature 1 -->
-                <div class="p-8 rounded-3xl bg-gray-50 hover:bg-lime-50 transition duration-300 border border-transparent hover:border-lime-200 group">
-                    <div class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-sm mb-6 text-lime-600 group-hover:scale-110 transition">
-                        <i data-lucide="clock" class="w-8 h-8"></i>
+            
+            <div class="grid md:grid-cols-3 gap-10">
+                <div class="group p-8 rounded-2xl bg-gray-50 hover:bg-green-50 transition duration-300 border border-transparent hover:border-green-200">
+                    <div class="w-14 h-14 bg-green-100 rounded-xl flex items-center justify-center text-bee-green mb-6 group-hover:scale-110 transition">
+                        <i data-lucide="leaf" class="w-7 h-7"></i>
                     </div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-3">7/24 Taze & Hazır</h3>
-                    <p class="text-gray-600 leading-relaxed">Gece mesaisi veya erken sabah toplantısı fark etmez. Yemeğin her an taze.</p>
+                    <h3 class="text-xl font-bold mb-3">Günlük ve Taze</h3>
+                    <p class="text-gray-600 text-sm leading-relaxed">
+                        3-4 günlük raf ömrüne rağmen her sabah taze yüklenen Bowl, Wrap ve Salata çeşitleri. 4°C'de korunan lezzet.
+                    </p>
                 </div>
-                <!-- Feature 2 -->
-                <div class="p-8 rounded-3xl bg-gray-50 hover:bg-lime-50 transition duration-300 border border-transparent hover:border-lime-200 group">
-                    <div class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-sm mb-6 text-lime-600 group-hover:scale-110 transition">
-                        <i data-lucide="smartphone" class="w-8 h-8"></i>
+
+                <div class="group p-8 rounded-2xl bg-gray-50 hover:bg-blue-50 transition duration-300 border border-transparent hover:border-blue-200">
+                    <div class="w-14 h-14 bg-blue-100 rounded-xl flex items-center justify-center text-blue-600 mb-6 group-hover:scale-110 transition">
+                        <i data-lucide="smartphone" class="w-7 h-7"></i>
                     </div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-3">Temassız Teknoloji</h3>
-                    <p class="text-gray-600 leading-relaxed">BeeCup uygulaması ile önceden sipariş ver, QR kod ile saniyeler içinde teslim al.</p>
+                    <h3 class="text-xl font-bold mb-3">Akıllı Teknoloji</h3>
+                    <p class="text-gray-600 text-sm leading-relaxed">
+                        21.5" dokunmatik ekran ve BeeCup App ile saniyeler içinde QR ödeme. Sıra beklemek yok, bozuk para derdi yok.
+                    </p>
                 </div>
-                <!-- Feature 3 -->
-                <div class="p-8 rounded-3xl bg-gray-50 hover:bg-lime-50 transition duration-300 border border-transparent hover:border-lime-200 group">
-                    <div class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-sm mb-6 text-lime-600 group-hover:scale-110 transition">
-                        <i data-lucide="leaf" class="w-8 h-8"></i>
+
+                <div class="group p-8 rounded-2xl bg-gray-50 hover:bg-yellow-50 transition duration-300 border border-transparent hover:border-yellow-200">
+                    <div class="w-14 h-14 bg-yellow-100 rounded-xl flex items-center justify-center text-yellow-600 mb-6 group-hover:scale-110 transition">
+                        <i data-lucide="recycle" class="w-7 h-7"></i>
                     </div>
-                    <h3 class="text-xl font-bold text-gray-900 mb-3">Doğa Dostu</h3>
-                    <p class="text-gray-600 leading-relaxed">Boş kaplarını geri getir, puan kazan. Karbon ayak izimizi birlikte düşürelim.</p>
+                    <h3 class="text-xl font-bold mb-3">Sürdürülebilirlik</h3>
+                    <p class="text-gray-600 text-sm leading-relaxed">
+                        rPET ambalajlar ve "Kabını Getir Puan Kazan" sistemi. Yediğin kabı otomata geri at, puan kazan, doğayı koru.
+                    </p>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- MENU PREVIEW -->
-    <section id="menu" class="py-20 bg-gray-900 text-white overflow-hidden">
+    <section id="menu" class="py-20 bg-bee-dark text-white">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex flex-col md:flex-row justify-between items-end mb-12">
+            <div class="flex flex-col md:flex-row justify-between items-end mb-12 border-b border-gray-700 pb-6">
                 <div>
-                    <span class="text-lime-400 font-bold tracking-widest uppercase text-sm">Lezzet Şöleni</span>
-                    <h2 class="text-4xl font-bold mt-2">Haftanın Favorileri</h2>
+                    <h2 class="text-3xl font-bold text-white">Favori Lezzetler</h2>
+                    <p class="mt-2 text-gray-400">Diyetisyen onaylı, kalori hesaplı menüler.</p>
                 </div>
-                <button class="hidden md:flex items-center gap-2 text-lime-400 font-bold hover:text-lime-300 transition mt-4 md:mt-0">
-                    Tüm Menüyü Gör <i data-lucide="arrow-right" class="w-5 h-5"></i>
+                <button class="mt-4 md:mt-0 text-bee-yellow hover:text-white transition flex items-center gap-2">
+                    Tüm Menüyü Gör <i data-lucide="arrow-right" class="w-4 h-4"></i>
                 </button>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <!-- Item 1 -->
-                <div class="group relative rounded-2xl overflow-hidden aspect-[4/3] cursor-pointer">
-                    <img src="https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=600&q=80" alt="Bowl" class="w-full h-full object-cover group-hover:scale-110 transition duration-700" />
-                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-90"></div>
-                    <div class="absolute bottom-0 p-6 w-full">
-                        <div class="flex justify-between items-end">
-                            <h3 class="text-xl font-bold">Superfood Bowl</h3>
-                            <span class="bg-lime-500 text-black px-3 py-1 rounded-lg font-bold text-sm">155 ₺</span>
-                        </div>
+            <div class="grid md:grid-cols-4 gap-6">
+                <div class="bg-white/5 backdrop-blur-sm rounded-xl p-5 border border-white/10 hover:border-bee-yellow/50 transition group">
+                    <div class="h-40 bg-gray-700/50 rounded-lg mb-4 flex items-center justify-center text-sm text-gray-500 group-hover:bg-gray-700 transition">
+                        [Protein Bowl Görseli]
+                    </div>
+                    <h4 class="font-bold text-lg mb-1">Protein Bowl</h4>
+                    <p class="text-xs text-gray-400 mb-3">Izgara tavuk, kinoa, avokado</p>
+                    <div class="flex justify-between items-center">
+                        <span class="text-bee-yellow font-bold text-lg">155 TL</span>
+                        <span class="text-xs bg-white/10 px-2 py-1 rounded">450 kcal</span>
                     </div>
                 </div>
-                <!-- Item 2 -->
-                <div class="group relative rounded-2xl overflow-hidden aspect-[4/3] cursor-pointer">
-                    <img src="https://images.unsplash.com/photo-1626700051175-6818013e1d4f?auto=format&fit=crop&w=600&q=80" alt="Wrap" class="w-full h-full object-cover group-hover:scale-110 transition duration-700" />
-                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-90"></div>
-                    <div class="absolute bottom-0 p-6 w-full">
-                        <div class="flex justify-between items-end">
-                            <h3 class="text-xl font-bold">Spicy Chicken Wrap</h3>
-                            <span class="bg-lime-500 text-black px-3 py-1 rounded-lg font-bold text-sm">140 ₺</span>
-                        </div>
+                
+                <div class="bg-white/5 backdrop-blur-sm rounded-xl p-5 border border-white/10 hover:border-bee-yellow/50 transition group">
+                    <div class="h-40 bg-gray-700/50 rounded-lg mb-4 flex items-center justify-center text-sm text-gray-500 group-hover:bg-gray-700 transition">
+                        [Humuslu Wrap Görseli]
+                    </div>
+                    <h4 class="font-bold text-lg mb-1">Humuslu Wrap</h4>
+                    <p class="text-xs text-gray-400 mb-3">Tam buğday lavaş, ev yapımı humus</p>
+                    <div class="flex justify-between items-center">
+                        <span class="text-bee-yellow font-bold text-lg">140 TL</span>
+                        <span class="text-xs bg-white/10 px-2 py-1 rounded">380 kcal</span>
                     </div>
                 </div>
-                <!-- Item 3 -->
-                <div class="group relative rounded-2xl overflow-hidden aspect-[4/3] cursor-pointer">
-                    <img src="https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?auto=format&fit=crop&w=600&q=80" alt="Detox" class="w-full h-full object-cover group-hover:scale-110 transition duration-700" />
-                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-90"></div>
-                    <div class="absolute bottom-0 p-6 w-full">
-                        <div class="flex justify-between items-end">
-                            <h3 class="text-xl font-bold">Green Detox</h3>
-                            <span class="bg-lime-500 text-black px-3 py-1 rounded-lg font-bold text-sm">70 ₺</span>
-                        </div>
+
+                <div class="bg-white/5 backdrop-blur-sm rounded-xl p-5 border border-white/10 hover:border-bee-yellow/50 transition group">
+                    <div class="h-40 bg-gray-700/50 rounded-lg mb-4 flex items-center justify-center text-sm text-gray-500 group-hover:bg-gray-700 transition">
+                        [Mevsim Salata Görseli]
+                    </div>
+                    <h4 class="font-bold text-lg mb-1">Izgara Tavuk Salata</h4>
+                    <p class="text-xs text-gray-400 mb-3">Akdeniz yeşillikleri, cherry domates</p>
+                    <div class="flex justify-between items-center">
+                        <span class="text-bee-yellow font-bold text-lg">140 TL</span>
+                        <span class="text-xs bg-white/10 px-2 py-1 rounded">320 kcal</span>
+                    </div>
+                </div>
+
+                <div class="bg-white/5 backdrop-blur-sm rounded-xl p-5 border border-white/10 hover:border-bee-yellow/50 transition group">
+                    <div class="h-40 bg-gray-700/50 rounded-lg mb-4 flex items-center justify-center text-sm text-gray-500 group-hover:bg-gray-700 transition">
+                        [Detoks Suyu Görseli]
+                    </div>
+                    <h4 class="font-bold text-lg mb-1">Yeşil Detoks</h4>
+                    <p class="text-xs text-gray-400 mb-3">Salatalık, elma, maydanoz, limon</p>
+                    <div class="flex justify-between items-center">
+                        <span class="text-bee-yellow font-bold text-lg">70 TL</span>
+                        <span class="text-xs bg-white/10 px-2 py-1 rounded">120 kcal</span>
                     </div>
                 </div>
             </div>
-            
-            <button class="md:hidden w-full mt-8 bg-lime-600 text-white py-4 rounded-xl font-bold">Tüm Menüyü Gör</button>
         </div>
     </section>
 
-    <!-- APP SHOWCASE -->
-    <section id="app" class="py-20 bg-lime-50">
+    <footer class="bg-gray-900 text-gray-400 py-12 border-t border-gray-800">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="bg-white rounded-[3rem] p-8 md:p-16 shadow-2xl overflow-hidden relative">
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-                    <div>
-                        <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-6">Cebindeki Sağlık Asistanı.</h2>
-                        <ul class="space-y-4 mb-8">
-                            <li class="flex items-center gap-3 text-gray-600 font-medium"><i data-lucide="check-circle-2" class="text-lime-500 w-5 h-5"></i> Stok durumunu canlı takip et</li>
-                            <li class="flex items-center gap-3 text-gray-600 font-medium"><i data-lucide="check-circle-2" class="text-lime-500 w-5 h-5"></i> QR kod ile temassız öde</li>
-                            <li class="flex items-center gap-3 text-gray-600 font-medium"><i data-lucide="check-circle-2" class="text-lime-500 w-5 h-5"></i> BeeCoach yapay zeka ile öneri al</li>
-                            <li class="flex items-center gap-3 text-gray-600 font-medium"><i data-lucide="check-circle-2" class="text-lime-500 w-5 h-5"></i> Puan topla, ücretsiz yemek kazan</li>
-                        </ul>
-                        <div class="flex gap-4">
-                            <button class="bg-black text-white px-6 py-3 rounded-xl flex items-center gap-3 hover:opacity-80 transition">
-                                <div class="text-left">
-                                    <p class="text-[10px] font-medium uppercase">Download on the</p>
-                                    <p class="text-lg font-bold leading-none">App Store</p>
-                                </div>
-                            </button>
-                            <button class="bg-black text-white px-6 py-3 rounded-xl flex items-center gap-3 hover:opacity-80 transition">
-                                <div class="text-left">
-                                    <p class="text-[10px] font-medium uppercase">GET IT ON</p>
-                                    <p class="text-lg font-bold leading-none">Google Play</p>
-                                </div>
-                            </button>
-                        </div>
+            <div class="grid md:grid-cols-4 gap-8">
+                <div class="col-span-1 md:col-span-2">
+                    <div class="flex items-center gap-2 mb-4 text-white">
+                        <i data-lucide="hexagon" class="text-bee-yellow fill-current"></i>
+                        <span class="text-2xl font-bold">BeeCup</span>
                     </div>
-                    <div class="relative flex justify-center lg:justify-end">
-                         <div class="relative w-64 h-[500px] bg-gray-900 rounded-[3rem] border-8 border-gray-800 shadow-2xl overflow-hidden">
-                            <img src="https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=600&q=80" class="w-full h-full object-cover opacity-50" alt="App Screen" />
-                            <div class="absolute inset-0 flex flex-col items-center justify-center text-white p-6 text-center">
-                                <div class="w-16 h-16 bg-lime-500 rounded-full flex items-center justify-center mb-4">
-                                    <i data-lucide="leaf" class="w-8 h-8"></i>
-                                </div>
-                                <h3 class="font-bold text-2xl">BeeCup</h3>
-                                <p class="text-sm opacity-80">Uygulama Arayüzü</p>
-                            </div>
-                         </div>
-                         <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-lime-400 rounded-full mix-blend-multiply filter blur-3xl opacity-20 -z-10"></div>
-                         <div class="absolute top-1/2 left-1/4 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-yellow-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 -z-10"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- CONTACT -->
-    <section id="iletisim" class="py-24 bg-white">
-        <div class="max-w-3xl mx-auto px-4 text-center">
-            <h2 class="text-3xl font-bold text-gray-900 mb-4">Plazanıza BeeCup Getirin</h2>
-            <p class="text-gray-500 mb-10">Çalışanlarınız için sağlıklı bir mola, işletmeniz için prestijli bir çözüm. Formu doldurun, sizi arayalım.</p>
-            
-            <form class="space-y-4 text-left">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-1">Ad Soyad</label>
-                        <input type="text" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-lime-500 transition" placeholder="Örn: Atahan Arıcı" />
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-gray-700 mb-1">Şirket / Plaza Adı</label>
-                        <input type="text" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-lime-500 transition" placeholder="Örn: Kanyon Yönetim" />
-                    </div>
+                    <p class="text-sm max-w-xs leading-relaxed">
+                        Sağlıklı ve sürdürülebilir yemek otomatı çözümleri. 
+                        Plaza ve ofisler için taze, hızlı ve teknolojik beslenme.
+                    </p>
                 </div>
                 <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-1">E-posta</label>
-                    <input type="email" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-lime-500 transition" placeholder="ornek@sirket.com" />
+                    <h5 class="text-white font-bold mb-4">Hızlı Erişim</h5>
+                    <ul class="space-y-2 text-sm">
+                        <li><a href="#" class="hover:text-bee-green transition">Kurumsal Çözümler</a></li>
+                        <li><a href="#" class="hover:text-bee-green transition">Sıkça Sorulan Sorular</a></li>
+                        <li><a href="#" class="hover:text-bee-green transition">Gizlilik Politikası</a></li>
+                    </ul>
                 </div>
                 <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-1">Mesajınız</label>
-                    <textarea rows="4" class="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 outline-none focus:border-lime-500 transition" placeholder="Çalışan sayımız yaklaşık 500 kişi..."></textarea>
-                </div>
-                <button type="button" class="w-full bg-lime-600 text-white font-bold py-4 rounded-xl shadow-lg hover:bg-lime-700 transition">Gönder</button>
-            </form>
-        </div>
-    </section>
-
-    <!-- FOOTER -->
-    <footer class="bg-gray-900 text-gray-400 py-12">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div class="col-span-1 md:col-span-1">
-                <div class="flex items-center gap-2 mb-4 text-white">
-                    <i data-lucide="leaf" class="text-lime-500 w-6 h-6"></i>
-                    <span class="text-xl font-bold">BeeCup</span>
-                </div>
-                <p class="text-sm">Şehrin en taze, en hızlı ve en sürdürülebilir yemek çözümü.</p>
-            </div>
-            <div>
-                <h4 class="text-white font-bold mb-4">Hızlı Linkler</h4>
-                <ul class="space-y-2 text-sm">
-                    <li><a href="#" class="hover:text-lime-400 transition">Ana Sayfa</a></li>
-                    <li><a href="#" class="hover:text-lime-400 transition">Menü</a></li>
-                    <li><a href="#" class="hover:text-lime-400 transition">Kurumsal</a></li>
-                    <li><a href="#" class="hover:text-lime-400 transition">Sürdürülebilirlik</a></li>
-                </ul>
-            </div>
-            <div>
-                <h4 class="text-white font-bold mb-4">İletişim</h4>
-                <ul class="space-y-2 text-sm">
-                    <li class="flex items-center gap-2"><i data-lucide="map-pin" class="w-4 h-4"></i> İstanbul, Türkiye</li>
-                    <li class="flex items-center gap-2"><i data-lucide="mail" class="w-4 h-4"></i> info@beecup.com</li>
-                </ul>
-            </div>
-            <div>
-                <h4 class="text-white font-bold mb-4">Takip Et</h4>
-                <div class="flex gap-4">
-                    <a href="#" class="bg-gray-800 p-2 rounded-full hover:bg-lime-600 hover:text-white transition"><i data-lucide="instagram" class="w-5 h-5"></i></a>
-                    <a href="#" class="bg-gray-800 p-2 rounded-full hover:bg-lime-600 hover:text-white transition"><i data-lucide="linkedin" class="w-5 h-5"></i></a>
+                    <h5 class="text-white font-bold mb-4">İletişim</h5>
+                    <ul class="space-y-2 text-sm">
+                        <li class="flex items-center gap-2"><i data-lucide="map-pin" class="w-4 h-4"></i> Levent, İstanbul</li>
+                        <li class="flex items-center gap-2"><i data-lucide="mail" class="w-4 h-4"></i> info@beecupco.com</li>
+                        <li class="flex items-center gap-2"><i data-lucide="phone" class="w-4 h-4"></i> +90 212 000 00 00</li>
+                    </ul>
                 </div>
             </div>
-        </div>
-        <div class="max-w-7xl mx-auto px-4 mt-12 pt-8 border-t border-gray-800 text-center text-xs">
-            © 2024 BeeCup Teknoloji A.Ş. Tüm hakları saklıdır.
+            <div class="mt-12 pt-8 border-t border-gray-800 text-xs text-center flex flex-col md:flex-row justify-between items-center">
+                <span>&copy; 2025 BeeCup Smart Food Vending. Tüm hakları saklıdır.</span>
+                <div class="flex gap-4 mt-4 md:mt-0">
+                    <i data-lucide="instagram" class="w-5 h-5 hover:text-white cursor-pointer transition"></i>
+                    <i data-lucide="linkedin" class="w-5 h-5 hover:text-white cursor-pointer transition"></i>
+                    <i data-lucide="twitter" class="w-5 h-5 hover:text-white cursor-pointer transition"></i>
+                </div>
+            </div>
         </div>
     </footer>
 
-    <!-- SCRIPTS -->
     <script>
-        // İkonları Yükle
         lucide.createIcons();
-
-        // Menü Aç/Kapa
-        function toggleMenu() {
-            const menu = document.getElementById('mobileMenu');
-            menu.classList.toggle('hidden');
-        }
     </script>
 </body>
 </html>
-```
-
----
