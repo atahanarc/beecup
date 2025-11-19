@@ -2,19 +2,13 @@ import React, { useState, useRef, useEffect } from 'react';
 import { 
   ShoppingBag, Leaf, Plus, Minus, ArrowRight, Recycle, 
   X, Sparkles, Send, MapPin, ChevronRight, User, 
-  LogOut, Star, Menu, Search
+  LogOut, Star, Menu, Search, CheckCircle
 } from 'lucide-react';
 
 // --- API AYARLARI ---
 const apiKey = ""; // API Key buraya
 
 // --- DATA ---
-const VENDING_MACHINES = [
-  { id: 1, name: "Kanyon AVM", type: "Plaza", status: "Open" },
-  { id: 2, name: "Levent 199", type: "Plaza", status: "Open" },
-  { id: 3, name: "Maslak 42", type: "Plaza", status: "Open" },
-];
-
 const MENU_ITEMS = [
   { id: 1, name: "Superfood Bowl", category: "Bowl", price: 155, cal: 450, image: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=800&q=80", description: "Kinoa, avokado, haşlanmış nohut ve özel sos.", tags: ["Popüler"] },
   { id: 2, name: "Izgara Tavuklu Bowl", category: "Bowl", price: 155, cal: 520, image: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80", description: "Izgara tavuk göğsü, siyah pirinç.", tags: ["Doyurucu"] },
@@ -29,7 +23,6 @@ const CATEGORIES = ["Tümü", "Bowl", "Salata", "Wrap", "Atıştırmalık", "İ�
 // --- GEMINI AI FONKSİYONU ---
 async function generateGeminiResponse(prompt) {
   try {
-    // Mock Response (API Key yoksa hata vermesin diye)
     if (!apiKey) return new Promise(r => setTimeout(() => r("Harika bir seçim! Bu ürün hem lezzetli hem de besleyici. Sepetine eklememi ister misin? 🥗"), 1000));
     
     const response = await fetch(
@@ -95,7 +88,7 @@ export default function App() {
     <div className="min-h-screen bg-[#F9F9F9] font-sans text-gray-800 selection:bg-[#F4D03F] selection:text-black relative overflow-x-hidden">
       
       {/* --- NAVBAR --- */}
-      <nav className="fixed w-full z-40 bg-white/80 backdrop-blur-lg border-b border-gray-200">
+      <nav className="fixed w-full z-40 bg-white/90 backdrop-blur-lg border-b border-gray-200 transition-all">
         <div className="max-w-7xl mx-auto px-6 h-20 flex justify-between items-center">
           <div className="flex items-center gap-3 cursor-pointer" onClick={() => window.scrollTo(0,0)}>
              <div className="w-10 h-10 bg-[#F4D03F] rounded-xl flex items-center justify-center text-white shadow-sm hover:rotate-12 transition">
@@ -106,7 +99,7 @@ export default function App() {
 
           <div className="hidden md:flex items-center gap-8">
              {['MENÜ', 'LOKASYONLAR', 'SÜRDÜRÜLEBİLİRLİK'].map(item => (
-               <a key={item} href="#" className="text-xs font-bold text-gray-500 hover:text-[#3A7D44] tracking-widest transition">{item}</a>
+               <button key={item} onClick={() => document.getElementById('menu').scrollIntoView({behavior:'smooth'})} className="text-xs font-bold text-gray-500 hover:text-[#3A7D44] tracking-widest transition">{item}</button>
              ))}
           </div>
 
@@ -201,7 +194,7 @@ export default function App() {
 
       {/* --- SIDEBARS & MODALS --- */}
 
-      {/* 1. CART DRAWER (Sağdan Kayan Sepet) */}
+      {/* 1. CART DRAWER */}
       <div className={`fixed inset-0 z-50 transition-opacity duration-300 ${isCartOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setIsCartOpen(false)}></div>
          <div className={`absolute top-0 right-0 h-full w-full md:w-[450px] bg-white shadow-2xl transition-transform duration-300 flex flex-col ${isCartOpen ? 'translate-x-0' : 'translate-x-full'}`}>
@@ -249,7 +242,7 @@ export default function App() {
          </div>
       </div>
 
-      {/* 2. AI CHAT WIDGET (Sağ Alt Floating) */}
+      {/* 2. AI CHAT WIDGET */}
       <div className="fixed bottom-8 right-8 z-40 flex flex-col items-end gap-4">
          {isAIOpen && (
             <div className="bg-white w-[350px] h-[500px] rounded-3xl shadow-2xl border border-gray-100 flex flex-col overflow-hidden animate-fade-in-up origin-bottom-right">
@@ -288,13 +281,13 @@ export default function App() {
          </button>
       </div>
 
-      {/* 3. PROFILE MODAL (Basit Pop-up) */}
+      {/* 3. PROFILE MODAL */}
       {isProfileOpen && (
          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 backdrop-blur-sm" onClick={() => setIsProfileOpen(false)}>
             <div className="bg-white w-full max-w-md rounded-[2rem] p-8 shadow-2xl animate-fade-in-up" onClick={e => e.stopPropagation()}>
                <div className="flex justify-between items-start mb-6">
                   <div className="flex items-center gap-4">
-                     <div className="w-16 h-16 bg-gray-100 rounded-full overflow-hidden"><img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80" className="w-full h-full object-cover"/></div>
+                     <div className="w-16 h-16 bg-gray-100 rounded-full overflow-hidden"><img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80" className="w-full h-full object-cover" alt="Profile"/></div>
                      <div><h3 className="text-xl font-bold text-[#1F2937]">Ali Yılmaz</h3><p className="text-gray-500 text-sm">Maslak 42</p></div>
                   </div>
                   <button onClick={() => setIsProfileOpen(false)} className="p-2 bg-gray-100 rounded-full"><X size={20}/></button>
