@@ -473,5 +473,155 @@ export default function App() {
       {/* Masaüstü Arka Plan (Sadece geniş ekranda görünür) */}
       <div className="hidden lg:block absolute inset-0 z-0 overflow-hidden">
          <div className="absolute inset-0 bg-gradient-to-br from-[#3A7D44]/5 to-[#F4D03F]/5"></div>
-         <div className="absolute top-0 left-0 w
-         
+         <div className="absolute top-0 left-0 w-full h-full flex items-center justify-between px-20">
+            <div className="text-[#3A7D44] opacity-10">
+               <Leaf size={400} />
+            </div>
+            <div className="text-right max-w-md text-[#1F2937]">
+               <h1 className="text-6xl font-black mb-4 leading-tight">Ofis <br/>Yemeği <br/><span className="text-[#3A7D44]">Yenilendi.</span></h1>
+               <p className="text-xl text-gray-500">BeeCup Web App ile siparişini ver, QR ile teslim al.</p>
+            </div>
+         </div>
+      </div>
+
+      {/* UYGULAMA KONTEYNERİ */}
+      <div className="w-full h-full sm:h-[850px] sm:max-w-[430px] bg-lime-50 sm:rounded-[2.5rem] sm:shadow-2xl sm:border-[8px] sm:border-gray-900 relative overflow-hidden flex flex-col z-10">
+        
+        {/* Bildirim */}
+        {notification && (
+          <div className="absolute top-4 left-4 right-4 z-[80] bg-lime-700 text-white px-4 py-3 rounded-2xl shadow-xl text-sm flex items-center justify-center font-bold animate-bounce-in gap-2">
+            <span className="bg-white/20 p-1 rounded-full"><Leaf size={12}/></span> {notification}
+          </div>
+        )}
+
+        {/* İçerik Alanı */}
+        <main className="flex-1 overflow-y-auto scrollbar-hide bg-lime-50 relative">
+          {activeTab === 'home' && renderHome()}
+          {activeTab === 'cart' && renderCart()}
+          {activeTab === 'ai' && (
+            <AICoachScreen 
+              chatMessages={chatMessages}
+              isChatLoading={isChatLoading}
+              chatInput={chatInput}
+              setChatInput={setChatInput}
+              handleSendMessage={handleSendMessage}
+              chatEndRef={chatEndRef}
+            />
+          )}
+          {activeTab === 'profile' && (
+            <ProfileScreen 
+              userPoints={userPoints} 
+              handleRecycle={handleRecycle}
+              machineName={selectedMachine?.name}
+            />
+          )}
+        </main>
+
+        {/* Alt Navigasyon (GRID LAYOUT İLE EŞİT ARALIK) */}
+        <nav className="bg-white border-t border-lime-100 px-2 pb-2 pt-0 grid grid-cols-5 items-end absolute bottom-0 w-full pb-safe z-40 shadow-[0_-10px_30px_-10px_rgba(0,0,0,0.05)] h-[80px]">
+          
+          {/* 1. Ana Sayfa */}
+          <button onClick={() => setActiveTab('home')} className={`flex flex-col items-center justify-center gap-1 mb-3 transition ${activeTab === 'home' ? 'text-lime-600 scale-105' : 'text-gray-400 hover:text-lime-500'}`}>
+            <Home size={24} strokeWidth={activeTab === 'home' ? 2.5 : 2} />
+            <span className="text-[10px] font-bold">Ana Sayfa</span>
+          </button>
+
+          {/* 2. Asistan */}
+          <button onClick={() => setActiveTab('ai')} className={`flex flex-col items-center justify-center gap-1 mb-3 transition ${activeTab === 'ai' ? 'text-lime-600 scale-105' : 'text-gray-400 hover:text-lime-500'}`}>
+            <MessageSquare size={24} strokeWidth={activeTab === 'ai' ? 2.5 : 2} />
+            <span className="text-[10px] font-bold">Asistan</span>
+          </button>
+          
+          {/* 3. QR Butonu (ORTA - Floating) */}
+          <div className="relative flex flex-col items-center justify-end h-full">
+             <button 
+               onClick={() => setShowQR(true)} 
+               className="absolute -top-6 w-16 h-16 bg-gradient-to-br from-lime-500 to-lime-600 rounded-full shadow-xl shadow-lime-200 flex items-center justify-center text-white hover:scale-105 transition border-4 border-lime-50 group z-50"
+             >
+               <QrCode size={28} className="group-hover:rotate-12 transition"/>
+             </button>
+             <span className="text-[10px] font-bold text-gray-400 mb-3">QR</span>
+          </div>
+
+          {/* 4. Sepet */}
+          <button onClick={() => setActiveTab('cart')} className={`flex flex-col items-center justify-center gap-1 mb-3 transition ${activeTab === 'cart' ? 'text-lime-600 scale-105' : 'text-gray-400 hover:text-lime-500'}`}>
+            <div className="relative">
+              <ShoppingBag size={24} strokeWidth={activeTab === 'cart' ? 2.5 : 2} />
+              {cart.length > 0 && <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[9px] flex items-center justify-center rounded-full font-bold shadow-sm border border-white">{cart.reduce((a,b)=>a+b.quantity,0)}</span>}
+            </div>
+            <span className="text-[10px] font-bold">Sepetim</span>
+          </button>
+          
+          {/* 5. Profil */}
+          <button onClick={() => setActiveTab('profile')} className={`flex flex-col items-center justify-center gap-1 mb-3 transition ${activeTab === 'profile' ? 'text-lime-600 scale-105' : 'text-gray-400 hover:text-lime-500'}`}>
+            <User size={24} strokeWidth={activeTab === 'profile' ? 2.5 : 2} />
+            <span className="text-[10px] font-bold">Profil</span>
+          </button>
+        </nav>
+
+        {/* Konum Seçim Modalı */}
+        {showLocationModal && (
+          <div className="absolute inset-0 bg-black/50 z-[99] flex items-end sm:items-center justify-center p-4 animate-fade-in backdrop-blur-sm" onClick={() => setShowLocationModal(false)}>
+             <div className="bg-white w-full max-w-sm rounded-3xl p-6 shadow-2xl animate-slide-up" onClick={e => e.stopPropagation()}>
+                <div className="flex justify-between items-center mb-4">
+                   <h3 className="text-xl font-bold text-lime-900">Otomat Seçimi</h3>
+                   <button onClick={() => setShowLocationModal(false)} className="bg-gray-100 p-2 rounded-full hover:bg-gray-200"><X size={20}/></button>
+                </div>
+                <p className="text-gray-500 text-sm mb-6">Siparişini hazırlamamız için konumunu seç.</p>
+                <div className="space-y-3">
+                  {VENDING_MACHINES.map(machine => (
+                    <button 
+                      key={machine.id}
+                      onClick={() => handleMachineSelect(machine)}
+                      className={`w-full p-4 rounded-2xl flex items-center justify-between border transition-all ${selectedMachine?.id === machine.id ? 'bg-lime-50 border-lime-500 ring-1 ring-lime-500' : 'bg-white border-gray-100 hover:border-lime-300'}`}
+                    >
+                        <div className="flex items-center gap-3">
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center ${selectedMachine?.id === machine.id ? 'bg-lime-200 text-lime-700' : 'bg-gray-50 text-gray-400'}`}>
+                            <MapPin size={20}/>
+                          </div>
+                          <div className="text-left">
+                            <h4 className="font-bold text-lime-900 text-sm">{machine.name}</h4>
+                            <p className="text-xs text-gray-500">{machine.type}</p>
+                          </div>
+                        </div>
+                        {selectedMachine?.id === machine.id && <div className="w-3 h-3 bg-lime-500 rounded-full"></div>}
+                    </button>
+                  ))}
+                </div>
+             </div>
+          </div>
+        )}
+
+        {/* QR Modal */}
+        {showQR && (
+          <div className="absolute inset-0 bg-lime-900/90 z-[99] flex items-center justify-center p-4 animate-fade-in backdrop-blur-sm" onClick={handleCloseQR}>
+            <div className="bg-white w-full max-w-sm rounded-3xl p-8 text-center relative shadow-2xl" onClick={(e) => e.stopPropagation()}>
+              <button onClick={handleCloseQR} className="absolute top-4 right-4 p-2 bg-gray-100 rounded-full hover:bg-gray-200 transition"><X size={20}/></button>
+              <div className="w-20 h-20 bg-lime-100 rounded-full flex items-center justify-center mx-auto mb-6 text-lime-600 border-4 border-lime-50"><QrCode size={40}/></div>
+              <h3 className="text-2xl font-bold text-gray-800 mb-2">Sipariş Hazır!</h3>
+              <p className="text-gray-500 text-sm mb-6">Otomatın kamerasını aç ve kodu okut.</p>
+              <div className="bg-gray-900 p-4 rounded-2xl inline-block mb-4 shadow-inner">
+                 <div className="w-40 h-40 bg-white flex items-center justify-center rounded-lg overflow-hidden"><QrCode size={140} className="text-black"/></div>
+              </div>
+              <p className="text-xs text-gray-400 font-mono tracking-widest">#BEE-{Math.floor(Math.random()*9000)+1000}</p>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <style>{`
+        .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes fade-in-up { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes slide-up { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        @keyframes bounce-in { 0% { transform: scale(0.9); opacity: 0; } 70% { transform: scale(1.05); opacity: 1; } 100% { transform: scale(1); } }
+        .animate-fade-in { animation: fade-in 0.3s ease-out; }
+        .animate-fade-in-up { animation: fade-in-up 0.4s ease-out; }
+        .animate-slide-up { animation: slide-up 0.3s ease-out; }
+        .animate-bounce-in { animation: bounce-in 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+      `}</style>
+    </div>
+  );
+}
