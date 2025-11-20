@@ -1,17 +1,24 @@
+// src/App.jsx dosyasını güncelle:
+
 import React from 'react';
-import Navbar from './components/Navbar'; // Yeni oluşturacağımız bileşen
+import Navbar from './components/Navbar';
+import Hero from './components/Hero'; // Yeni eklediğimiz satır
 
 function App() {
   return (
     <>
       <Navbar />
       
-      {/* Buraya Ana Sayfa Bölümleri Gelecek: Hero, Menu, About Us... */}
       <main className="pt-20"> 
-        {/* pt-20, fixed Navbar altından başlamak için boşluk bırakır */}
-        <section className="h-screen flex items-center justify-center bg-gray-50">
-            <h1 className="text-4xl font-bold text-gray-800">Premium Site İnşa Ediliyor...</h1>
+        {/* Navbar'ın kapladığı alanı es geçmek için pt-20 kalsın */}
+        
+        <Hero /> {/* BURAYA YENİ BİLEŞENİ EKLEDİK */}
+        
+        {/* Diğer bölümler (Menu, AboutUs) buraya eklenecek */}
+        <section className="h-screen bg-gray-100 flex items-center justify-center">
+            <p className="text-xl text-gray-500">Menü ve Diğer Bölümler Bu Alana Gelecek...</p>
         </section>
+        
       </main>
       
     </>
