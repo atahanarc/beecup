@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  ShoppingBag, MapPin, ChevronRight, Star, X, Plus, Minus, 
-  User, Menu, ArrowRight, Check, Leaf, Play, MessageSquare, LogIn, Smartphone, Mail, Send, Phone, QrCode
+  ShoppingBag, MapPin, Star, X, Plus, Minus, 
+  User, ArrowRight, Check, Leaf, Smartphone, Mail, 
+  Phone, Send, MessageSquare, Clock, Navigation, CheckCircle2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -10,20 +11,20 @@ const CATEGORIES = ["Tümü", "Bowl", "Salata", "Wrap", "Atıştırmalık", "İ�
 
 const MENU = [
   // BOWLS
-  [cite_start]{ id: 1, name: "Somonlu Kinoa Bowl", price: 155, cal: 450, cat: "Bowl", image: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=800&fit=crop", desc: "Norveç somonu, avokado, kinoa[cite: 191]." },
-  { id: 2, name: "Izgara Tavuk Bowl", price: 155, cal: 420, cat: "Bowl", image: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?q=80&w=800&fit=crop", desc: "Organik tavuk, siyah pirinç, humus." },
+  { id: 1, name: "Somonlu Kinoa Bowl", price: 155, cal: 450, cat: "Bowl", image: "https://images.unsplash.com/photo-1550942461-9c6f2a52702c?q=80&w=800&auto=format&fit=crop", desc: "Norveç somonu, avokado, kinoa, edamame.", badge: "ŞEFİN SEÇİMİ" },
+  { id: 2, name: "Izgara Tavuk Bowl", price: 155, cal: 420, cat: "Bowl", image: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?q=80&w=800&auto=format&fit=crop", desc: "Organik tavuk, siyah pirinç, humus.", badge: "POPÜLER" },
   // SALADS
-  [cite_start]{ id: 6, name: "Ege Salatası", price: 140, cal: 280, cat: "Salata", image: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?q=80&w=800&auto=format&fit=crop", desc: "Ezine peyniri, organik domates, salatalık[cite: 193]." },
+  { id: 6, name: "Ege Salatası", price: 140, cal: 280, cat: "Salata", image: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?q=80&w=800&auto=format&fit=crop", desc: "Ezine peyniri, organik domates, salatalık.", badge: "VEGAN" },
   // WRAPS
-  [cite_start]{ id: 11, name: "Humuslu Wrap", price: 140, cal: 390, cat: "Wrap", image: "https://images.unsplash.com/photo-1626700051175-6818013e1d4f?q=80&w=800&fit=crop", desc: "Ev yapımı humus, ızgara tavuk, köz biber[cite: 194]." },
+  { id: 11, name: "Humuslu Wrap", price: 140, cal: 390, cat: "Wrap", image: "https://images.unsplash.com/photo-1626700051175-6818013e1d4f?q=80&w=800&fit=crop", desc: "Ev yapımı humus, ızgara tavuk, köz biber.", badge: "YENİ" },
   // DRINKS
-  [cite_start]{ id: 21, name: "Green Detox", price: 70, cal: 120, cat: "İçecek", image: "https://images.unsplash.com/photo-1610970881699-44a5587cabec?q=80&w=800&fit=crop", desc: "Yeşil elma, ıspanak, kereviz sapı[cite: 196]." },
+  { id: 21, name: "Green Detox", price: 70, cal: 120, cat: "İçecek", image: "https://images.unsplash.com/photo-1610970881699-44a5587cabec?q=80&w=800&fit=crop", desc: "Yeşil elma, ıspanak, kereviz sapı.", badge: "DETOX" },
 ];
 
 const LOCATIONS = [
-  { id: 1, name: "Kanyon AVM", area: "Levent", type: "Plaza", status: "Açık", hours: "08:00-22:00" }, 
-  { id: 2, name: "Levent 199", area: "Levent", type: "Plaza", status: "Açık", hours: "7/24" }, 
-  { id: 3, name: "Maslak 42", area: "Maslak", type: "Plaza", status: "Açık", hours: "08:00-20:00" }
+  { id: 1, name: "Kanyon AVM", area: "Levent", distance: "120m", type: "Plaza Girişi", status: "Açık", hours: "08:00 - 22:00" },
+  { id: 2, name: "Levent 199", area: "Levent", distance: "400m", type: "Ana Lobi", status: "Açık", hours: "7/24 Açık" },
+  { id: 3, name: "Maslak 42", area: "Maslak", distance: "2.1km", type: "Ofis Katı", status: "Açık", hours: "07:30 - 19:00" },
 ];
 
 export default function App() {
@@ -32,7 +33,8 @@ export default function App() {
   const [cartOpen, setCartOpen] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
   const [registerOpen, setRegisterOpen] = useState(false);
-  const [locationOpen, setLocationOpen] = useState(false); // Dolap Seçme Modalı
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [locationOpen, setLocationOpen] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState("Tümü");
   const [cart, setCart] = useState([]);
@@ -47,7 +49,10 @@ export default function App() {
 
   // Functions
   const addToCart = (item) => {
-    if(!selectedLocation) { setLocationOpen(true); return; }
+    if (!selectedLocation) {
+      setLocationOpen(true);
+      return;
+    }
     setCart(prev => {
       const exist = prev.find(i => i.id === item.id);
       return exist ? prev.map(i => i.id === item.id ? { ...i, qty: i.qty + 1 } : i) : [...prev, { ...item, qty: 1 }];
@@ -71,11 +76,11 @@ export default function App() {
   const selectLocation = (loc) => {
     setSelectedLocation(loc);
     setLocationOpen(false);
-    // Menüye kaydır
     setTimeout(() => document.getElementById('menu').scrollIntoView({ behavior: 'smooth' }), 500);
   };
 
   const filteredItems = selectedCategory === "Tümü" ? MENU : MENU.filter(i => i.cat === selectedCategory);
+  const totalAmount = cart.reduce((acc, item) => acc + (item.price * item.qty), 0);
 
   return (
     <div className="bg-[#FFFFFF] text-[#1A3C34] min-h-screen font-sans">
@@ -95,7 +100,6 @@ export default function App() {
           </div>
 
           <div className="flex items-center gap-4">
-             {/* Seçili Konum Göstergesi */}
              {selectedLocation && (
                <div onClick={() => setLocationOpen(true)} className={`hidden lg:flex cursor-pointer items-center gap-2 px-4 py-2 rounded-full border ${isScrolled ? 'border-[#1A3C34] text-[#1A3C34]' : 'border-white/30 text-white'}`}>
                  <MapPin size={14}/> <span className="text-xs font-bold">{selectedLocation.name}</span>
@@ -117,13 +121,11 @@ export default function App() {
         </div>
       </nav>
 
-      {/* --- HERO SECTION (FIXED VIDEO) --- */}
-      <header className="relative h-screen w-full flex items-center justify-center overflow-hidden bg-[#1A3C34]">
-         {/* Sağlam Video Linki (Pexels) */}
-         <video autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover opacity-60">
+      {/* --- HERO SECTION (VIDEO) --- */}
+      <header className="relative h-screen w-full flex items-center justify-center overflow-hidden">
+         <video autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover">
             <source src="https://videos.pexels.com/video-files/3196267/3196267-uhd_2560_1440_25fps.mp4" type="video/mp4" />
          </video>
-         {/* Gradient Overlay */}
          <div className="absolute inset-0 bg-gradient-to-b from-[#1A3C34]/80 via-[#1A3C34]/40 to-[#FFFFFF]"></div>
          
          <div className="relative z-10 text-center text-white px-6 max-w-4xl">
@@ -131,75 +133,98 @@ export default function App() {
                <span className="inline-block py-1 px-4 border border-[#C5A85F] text-[#C5A85F] rounded-full text-xs font-bold tracking-[0.3em] mb-8">PREMIUM SMART VENDING</span>
                <h1 className="text-6xl md:text-9xl font-serif leading-none mb-8">Doğal. <span className="text-[#C5A85F] italic">Akıllı.</span></h1>
                <p className="text-xl text-gray-200 font-light mb-12 max-w-2xl mx-auto leading-relaxed">
-                  Ofisinizdeki taze yemek istasyonu. [cite_start]App üzerinden seç, QR ile teslim al [cite: 50-65].
+                  Teknoloji ve gastronomiyi birleştiren yeni nesil otomat deneyimi. 
+                  Uygulamadan seç, QR ile öde, asansör sistemi taze yemeğini sunsun.
                </p>
-               <div className="flex flex-col sm:flex-row justify-center gap-4">
-                  {/* DOLAP SEÇME BUTONU (FIXED) */}
-                  <button onClick={() => setLocationOpen(true)} className="bg-[#C5A85F] text-[#1A3C34] px-10 py-4 rounded-full font-bold tracking-wider hover:bg-white transition-all shadow-xl flex items-center justify-center gap-2">
-                     <MapPin size={18}/> EN YAKIN OTOMATI BUL
-                  </button>
-                  <button onClick={() => document.getElementById('app-indir').scrollIntoView({behavior:'smooth'})} className="bg-white/10 backdrop-blur-md border border-white/30 text-white px-10 py-4 rounded-full font-bold tracking-wider hover:bg-white hover:text-[#1A3C34] transition-all">
-                     APP İNDİR
-                  </button>
+               <div className="flex justify-center gap-4">
+                  <a href="#menu" className="bg-[#C5A85F] text-[#1A3C34] px-10 py-4 rounded-full font-bold tracking-wider hover:bg-white transition-all shadow-xl">MENÜYÜ KEŞFET</a>
+                  <button onClick={() => setRegisterOpen(true)} className="bg-white/10 backdrop-blur-md border border-white/30 text-white px-10 py-4 rounded-full font-bold tracking-wider hover:bg-white hover:text-[#1A3C34] transition-all">HESAP OLUŞTUR</button>
                </div>
             </motion.div>
          </div>
       </header>
 
-      {/* --- NASIL ÇALIŞIR (ASANSÖR SİSTEMİ) --- */}
-      <section id="nasil" className="py-24 bg-white">
+      {/* --- MİSYON SECTION --- */}
+      <section id="misyon" className="py-24 px-6 max-w-[1440px] mx-auto">
+         <div className="grid md:grid-cols-2 gap-16 items-center">
+            <div>
+               <span className="text-[#C5A85F] font-bold tracking-widest text-xs uppercase block mb-4">MİSYONUMUZ</span>
+               <h2 className="text-4xl md:text-5xl font-serif text-[#1A3C34] mb-6 leading-tight">Hızlı Yaşamda <br/>Sağlıklı Mola.</h2>
+               <p className="text-[#1A3C34]/70 text-lg leading-relaxed mb-6">
+                  [cite_start]BeeCup, yoğun şehir hayatında sağlıklı ve taze gıdaya erişimi demokratize etmek için doğdu [cite: 20-22, 25]. 
+                  Geleneksel otomatların aksine, biz sadece "gerçek yemek" sunuyoruz.
+               </p>
+               <ul className="space-y-4">
+                  <li className="flex items-center gap-3 text-[#1A3C34] font-bold"><Check className="text-[#C5A85F]"/> Sürdürülebilir & Yerel Malzemeler</li>
+                  <li className="flex items-center gap-3 text-[#1A3C34] font-bold"><Check className="text-[#C5A85F]"/> Sıfır Plastik Atık Politikası</li>
+                  <li className="flex items-center gap-3 text-[#1A3C34] font-bold"><Check className="text-[#C5A85F]"/> Akıllı Stok Yönetimi</li>
+               </ul>
+            </div>
+            <div className="relative">
+               <img src="https://images.unsplash.com/photo-1498837167922-ddd27525d352?q=80&w=1000&auto=format&fit=crop" className="rounded-[3rem] shadow-2xl w-full object-cover" alt="Misyon" />
+            </div>
+         </div>
+      </section>
+
+      {/* --- NASIL ÇALIŞIR (ASANSÖR DETAYI) --- */}
+      <section id="nasil" className="py-24 bg-[#1A3C34] text-white overflow-hidden">
          <div className="max-w-[1440px] mx-auto px-6 text-center mb-16">
-            <h2 className="text-5xl font-serif text-[#1A3C34] mb-6">Teknoloji ile Tanışın</h2>
-            <p className="text-gray-500 max-w-2xl mx-auto">Ürünleriniz düşerek değil, robotik asansör sistemiyle nazikçe hazneye taşınır.</p>
+            <h2 className="text-5xl font-serif mb-6">Teknoloji ile Tanışın</h2>
+            [cite_start]<p className="text-white/60 max-w-2xl mx-auto">BeeCup otomatları, ürünlerinizi düşürmeden, hassas asansör sistemiyle size ulaştırır[cite: 62].</p>
          </div>
          <div className="max-w-[1440px] mx-auto px-6 grid md:grid-cols-3 gap-10">
             {[
-               { title: "Seç & Öde", desc: "App'ten veya ekrandan seç, QR ile öde.", icon: <Smartphone size={32}/> },
-               { title: "Asansör Sistemi", desc: "Robotik kol ürünü raftan alır ve hazneye indirir.", icon: <ArrowRight size={32}/> },
-               { title: "Teslim Al", desc: "Hazneden yemeğini al. Kabı geri getir, puan kazan!", icon: <Leaf size={32}/> }
+               { title: "Seç & Öde", desc: "App üzerinden veya 21.5\" dokunmatik ekrandan ürününü seç, QR veya kartla öde.", icon: <Smartphone size={32}/> },
+               { title: "Asansör Sistemi", desc: "Robotik asansör ilgili rafa gider, ürününü nazikçe alır ve alt hazneye indirir.", icon: <ArrowRight size={32}/> },
+               { title: "Afiyet Olsun", desc: "Hazneden ürününü al. Kabı geri getirmeyi unutma, puan kazan!", icon: <Leaf size={32}/> }
             ].map((step, i) => (
-               <div key={i} className="bg-[#F9F8F4] p-10 rounded-[2.5rem] hover:shadow-xl transition text-center group">
-                  <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-6 text-[#1A3C34] shadow-sm group-hover:scale-110 transition">{step.icon}</div>
-                  <h3 className="text-2xl font-serif mb-3 text-[#1A3C34]">{step.title}</h3>
-                  <p className="text-gray-500 leading-relaxed">{step.desc}</p>
+               <div key={i} className="bg-white/5 p-8 rounded-[2.5rem] border border-white/10 hover:bg-white/10 transition text-center">
+                  <div className="w-16 h-16 bg-[#C5A85F] rounded-full flex items-center justify-center mx-auto mb-6 text-[#1A3C34]">{step.icon}</div>
+                  <h3 className="text-2xl font-serif mb-3">{step.title}</h3>
+                  <p className="text-white/60 leading-relaxed">{step.desc}</p>
                </div>
             ))}
          </div>
       </section>
 
-      {/* --- MENU --- */}
-      <section id="menu" className="py-24 px-6 bg-[#F9F8F4]">
-         <div className="max-w-[1440px] mx-auto">
-            <div className="text-center mb-12">
-               <h2 className="text-5xl font-serif text-[#1A3C34] mb-8">Menüyü Keşfet</h2>
-               <div className="flex flex-wrap justify-center gap-3">
-                  {CATEGORIES.map(cat => (
-                     <button key={cat} onClick={() => setSelectedCategory(cat)} className={`px-6 py-2.5 rounded-full text-sm font-bold transition-all ${selectedCategory === cat ? 'bg-[#1A3C34] text-white shadow-lg' : 'bg-white text-gray-500 border border-gray-200 hover:border-[#1A3C34]'}`}>{cat}</button>
-                  ))}
-               </div>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-               {filteredItems.map((item) => (
-                  <div key={item.id} className="group bg-white p-4 rounded-[2.5rem] shadow-sm hover:shadow-2xl transition-all duration-300 cursor-pointer">
-                     <div className="relative h-64 rounded-[2rem] overflow-hidden mb-4">
-                        <img src={item.image} className="w-full h-full object-cover group-hover:scale-110 transition duration-700" alt={item.name} />
-                        <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-bold text-[#1A3C34] tracking-wide uppercase">{item.cat}</div>
-                     </div>
-                     <div className="px-2 pb-2">
-                        <div className="flex justify-between items-start mb-2">
-                           <h3 className="text-lg font-serif font-bold text-[#1A3C34]">{item.name}</h3>
-                           <span className="text-lg font-black text-[#C5A85F]">₺{item.price}</span>
-                        </div>
-                        <p className="text-xs text-gray-500 mb-4 line-clamp-2">{item.desc}</p>
-                        <button onClick={() => addToCart(item)} className="w-full bg-[#F9F8F4] text-[#1A3C34] py-3 rounded-xl font-bold text-xs hover:bg-[#1A3C34] hover:text-white transition flex items-center justify-center gap-2"><Plus size={14}/> SEPETE EKLE</button>
-                     </div>
-                  </div>
+      {/* --- MENU (25+ ITEMS) --- */}
+      <section id="menu" className="py-24 px-6 max-w-[1440px] mx-auto">
+         <div className="text-center mb-12">
+            <h2 className="text-5xl font-serif text-[#1A3C34] mb-8">Dolapta Neler Var?</h2>
+            <div className="flex flex-wrap justify-center gap-3">
+               {CATEGORIES.map(cat => (
+                  <button 
+                    key={cat} 
+                    onClick={() => setSelectedCategory(cat)}
+                    className={`px-6 py-2.5 rounded-full text-sm font-bold transition-all ${selectedCategory === cat ? 'bg-[#1A3C34] text-white shadow-lg' : 'bg-white text-gray-500 border border-gray-200 hover:border-[#1A3C34]'}`}
+                  >
+                     {cat}
+                  </button>
                ))}
             </div>
          </div>
+
+         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {filteredItems.map((item) => (
+               <div key={item.id} className="group bg-white p-4 rounded-[2.5rem] shadow-sm hover:shadow-2xl transition-all duration-300 cursor-pointer border border-gray-100">
+                  <div className="relative h-64 rounded-[2rem] overflow-hidden mb-4">
+                     <img src={item.image} className="w-full h-full object-cover group-hover:scale-110 transition duration-700" alt={item.name} />
+                     <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-bold text-[#1A3C34] tracking-wide uppercase">{item.badge || item.cat}</div>
+                  </div>
+                  <div className="px-2 pb-2">
+                     <div className="flex justify-between items-start mb-2">
+                        <h3 className="text-lg font-serif font-bold text-[#1A3C34]">{item.name}</h3>
+                        <span className="text-lg font-black text-[#C5A85F]">₺{item.price}</span>
+                     </div>
+                     <p className="text-xs text-gray-500 mb-4 line-clamp-2 h-8">{item.desc}</p>
+                     <button onClick={() => addToCart(item)} className="w-full bg-[#F9F8F4] text-[#1A3C34] py-3 rounded-xl font-bold text-xs hover:bg-[#1A3C34] hover:text-white transition flex items-center justify-center gap-2"><Plus size={14}/> SEPETE EKLE</button>
+                  </div>
+               </div>
+            ))}
+         </div>
       </section>
 
-      {/* --- APP DOWNLOAD & QR SECTION (YENİ) --- */}
+      {/* --- APP DOWNLOAD & QR --- */}
       <section id="app-indir" className="py-24 bg-[#1A3C34] text-white">
          <div className="max-w-[1440px] mx-auto px-6 grid md:grid-cols-2 gap-16 items-center">
             <div>
@@ -215,21 +240,32 @@ export default function App() {
                </div>
             </div>
             <div className="flex justify-center">
-               {/* QR CODE KUTUSU */}
+               {/* QR Kodu: api.qrserver.com ile gerçek QR oluşturuluyor */}
                <div className="bg-white p-8 rounded-[2.5rem] shadow-2xl text-center max-w-xs">
-                  <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://beecup.co/app" className="w-48 h-48 mx-auto mb-4 rounded-lg" alt="Download QR"/>
+                  <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://beecup.co/app" className="w-48 h-48 mx-auto mb-4 rounded-lg" alt="App QR"/>
                   <p className="text-[#1A3C34] font-bold">İndirmek için okutun</p>
-                  <p className="text-xs text-gray-400 mt-1">iOS & Android Uyumlu</p>
                </div>
             </div>
          </div>
       </section>
 
       {/* --- FOOTER --- */}
-      <footer className="bg-[#122A24] text-white py-12 border-t border-white/5">
-         <div className="max-w-[1440px] mx-auto px-6 flex flex-col md:flex-row justify-between items-center gap-6">
-            <div className="flex items-center gap-2"><Leaf className="text-[#C5A85F]"/><span className="font-serif font-bold text-xl">BeeCup</span></div>
-            <p className="text-white/30 text-xs">&copy; [cite_start]2025 BeeCup Smart Vending[cite: 158].</p>
+      <footer className="bg-[#122A24] text-white pt-24 pb-12 border-t border-white/5">
+         <div className="max-w-[1440px] mx-auto px-6">
+            <div className="grid md:grid-cols-2 gap-12 items-center border-b border-white/10 pb-16 mb-12">
+               <div>
+                  <h2 className="text-2xl font-serif mb-2">İletişim</h2>
+                  <p className="text-white/60 text-sm">hello@beecup.co • Levent 199</p>
+               </div>
+               <div className="flex justify-end">
+                   <button onClick={() => setFeedbackOpen(true)} className="flex items-center gap-2 text-[#C5A85F] font-bold border-b border-[#C5A85F] pb-1 hover:text-white hover:border-white transition">
+                      <MessageSquare size={20}/> Görüş ve Önerilerinizi Yazın
+                   </button>
+               </div>
+            </div>
+            <div className="text-center text-white/30 text-xs">
+               &copy; 2025 BeeCup Smart Vending.
+            </div>
          </div>
       </footer>
 
@@ -264,11 +300,13 @@ export default function App() {
                <form onSubmit={handleRegister} className="space-y-4">
                   <div className="flex gap-2"><input className="w-1/2 bg-[#F9F8F4] px-4 py-3 rounded-xl text-sm outline-none" placeholder="Ad" required/><input className="w-1/2 bg-[#F9F8F4] px-4 py-3 rounded-xl text-sm outline-none" placeholder="Soyad" required/></div>
                   <input className="w-full bg-[#F9F8F4] px-4 py-3 rounded-xl text-sm outline-none" placeholder="E-posta" type="email" required/>
+                  
                   {/* TELEFON NUMARASI ALANI */}
                   <div className="relative">
                      <Phone size={18} className="absolute left-4 top-3.5 text-gray-400"/>
                      <input className="w-full bg-[#F9F8F4] pl-12 pr-4 py-3 rounded-xl text-sm outline-none" placeholder="05XX XXX XX XX" type="tel" required/>
                   </div>
+                  
                   <input className="w-full bg-[#F9F8F4] px-4 py-3 rounded-xl text-sm outline-none" placeholder="Şifre" type="password" required/>
                   <button className="w-full bg-[#1A3C34] text-white py-4 rounded-xl font-bold mt-4 hover:bg-[#143d30] transition">KAYIT OL</button>
                </form>
@@ -277,7 +315,7 @@ export default function App() {
         )}
       </AnimatePresence>
 
-      {/* LOCATION MODAL (DOLAP SEÇME) */}
+      {/* LOCATION MODAL */}
       <AnimatePresence>
         {locationOpen && (
            <div className="fixed inset-0 z-[70] flex justify-end bg-black/50 backdrop-blur-sm" onClick={() => setLocationOpen(false)}>
@@ -303,6 +341,20 @@ export default function App() {
                  </div>
               </motion.div>
            </div>
+        )}
+      </AnimatePresence>
+
+      {/* FEEDBACK MODAL */}
+      <AnimatePresence>
+        {feedbackOpen && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={() => setFeedbackOpen(false)}>
+            <motion.div initial={{opacity:0, y:20}} animate={{opacity:1, y:0}} exit={{opacity:0, y:20}} className="bg-white w-full max-w-lg rounded-[2rem] p-8 relative">
+               <button onClick={() => setFeedbackOpen(false)} className="absolute top-6 right-6 p-2 hover:bg-gray-100 rounded-full"><X/></button>
+               <h2 className="text-2xl font-serif font-bold text-[#1A3C34] mb-4">Bize Yazın</h2>
+               <textarea className="w-full h-32 bg-[#F9F8F4] rounded-xl p-4 text-sm outline-none resize-none" placeholder="Görüş, öneri veya şikayetiniz..."></textarea>
+               <button onClick={() => setFeedbackOpen(false)} className="w-full bg-[#1A3C34] text-white py-3 rounded-xl font-bold mt-4 flex items-center justify-center gap-2"><Send size={16}/> GÖNDER</button>
+            </motion.div>
+          </div>
         )}
       </AnimatePresence>
 
