@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Menu, X, MapPin, User } from 'lucide-react'; 
-import logo from '../assets/logo.png'; // !!! LOGO YOLUNU KONTROL ET !!!
+import logo from '../assets/beecup-logo.png'; // !!! LOGO YOLUNU KONTROL ET !!!
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
