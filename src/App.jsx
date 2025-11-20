@@ -1,94 +1,73 @@
 import React, { useState, useEffect } from 'react';
 import { 
   ShoppingBag, MapPin, ChevronRight, Star, X, Plus, Minus, 
-  User, Menu, ArrowRight, Check, Leaf
+  User, Menu, ArrowRight, Check, Leaf, Play, MessageSquare, LogIn, Smartphone, Mail
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
-// --- DATA ---
-const LOCATIONS = [
-  { id: 1, name: "Kanyon AVM", area: "Levent", distance: "120m", type: "Plaza Girişi", status: "Açık", stock: "Yüksek" },
-  { id: 2, name: "Levent 199", area: "Levent", distance: "400m", type: "Ana Lobi", status: "Açık", stock: "Orta" },
-  { id: 3, name: "Maslak 42", area: "Maslak", distance: "2.1km", type: "Ofis Katı", status: "Açık", stock: "Düşük" },
-  { id: 4, name: "İTÜ Arı Teknokent", area: "Maslak", distance: "3.5km", type: "Kampüs", status: "Bakımda", stock: "Kapalı" },
-];
+// --- VERİLER (25+ Ürün - Rapor Bazlı & Genişletilmiş) ---
+const CATEGORIES = ["Tümü", "Bowl", "Salata", "Wrap", "Atıştırmalık", "İçecek"];
 
 const MENU = [
-  { 
-    id: 1, 
-    name: "Somonlu Kinoa Bowl", 
-    price: 155, 
-    cal: 450, 
-    cat: "Bowl",
-    image: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=1200&fit=crop", 
-    desc: "Norveç somonu, avokado, edamame, susam, özel asya sos." 
-  },
-  { 
-    id: 2, 
-    name: "Izgara Tavuk Bowl", 
-    price: 155, 
-    cal: 420, 
-    cat: "Bowl",
-    image: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?q=80&w=1200&fit=crop", 
-    desc: "Organik tavuk, siyah pirinç, humus, mevsim yeşillikleri." 
-  },
-  { 
-    id: 3, 
-    name: "Humuslu Wrap", 
-    price: 140, 
-    cal: 390, 
-    cat: "Wrap",
-    image: "https://images.unsplash.com/photo-1626700051175-6818013e1d4f?q=80&w=1200&fit=crop", 
-    desc: "Ev yapımı humus, közlenmiş biber, roka, tam buğday lavaş." 
-  },
-  { 
-    id: 4, 
-    name: "Green Detox", 
-    price: 70, 
-    cal: 120, 
-    cat: "İçecek",
-    image: "https://images.unsplash.com/photo-1610970881699-44a5587cabec?q=80&w=1200&fit=crop", 
-    desc: "Yeşil elma, ıspanak, kereviz sapı, limon, zencefil." 
-  },
-  { 
-    id: 5, 
-    name: "Ege Salatası", 
-    price: 140, 
-    cal: 280, 
-    cat: "Salata",
-    image: "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?q=80&w=1200&fit=crop", 
-    desc: "Ezine peyniri, organik domates, salatalık, kırma zeytin." 
-  },
-  { 
-    id: 6, 
-    name: "Fit Atıştırmalık", 
-    price: 110, 
-    cal: 250, 
-    cat: "Snack",
-    image: "https://images.unsplash.com/photo-1592417817098-8fd3d9eb14a5?q=80&w=1200&fit=crop", 
-    desc: "Taze havuç, salatalık dilimleri, humus ve grissini." 
-  }
+  // BOWLS [cite: 176, 191]
+  { id: 1, name: "Somonlu Kinoa Bowl", price: 155, cal: 450, cat: "Bowl", image: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=800&fit=crop", desc: "Norveç somonu, avokado, kinoa, edamame, susam." },
+  { id: 2, name: "Izgara Tavuk Bowl", price: 155, cal: 420, cat: "Bowl", image: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?q=80&w=800&fit=crop", desc: "Organik tavuk, siyah pirinç, humus, mevsim yeşillikleri." },
+  { id: 3, name: "Vegan Falafel Bowl", price: 155, cal: 380, cat: "Bowl", image: "https://images.unsplash.com/photo-1543339308-43e59d6b73a6?q=80&w=800&fit=crop", desc: "Fırın falafel, tahin sos, tabule, nar taneleri." },
+  { id: 4, name: "Asya Usulü Bowl", price: 160, cal: 440, cat: "Bowl", image: "https://images.unsplash.com/photo-1546069901-d5bfd2cbfb1f?q=80&w=800&fit=crop", desc: "Zencefilli tavuk, soya filizi, yer fıstığı sosu." },
+  { id: 5, name: "Köfteli Protein Bowl", price: 165, cal: 510, cat: "Bowl", image: "https://images.unsplash.com/photo-1511690656952-34342d5c2899?q=80&w=800&fit=crop", desc: "Izgara köfte, siyez bulguru, süzme yoğurt." },
+  
+  // SALADS [cite: 176, 193]
+  { id: 6, name: "Ege Salatası", price: 140, cal: 280, cat: "Salata", image: "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?q=80&w=800&fit=crop", desc: "Ezine peyniri, organik domates, salatalık, zeytin." },
+  { id: 7, name: "Sezar Salata", price: 145, cal: 350, cat: "Salata", image: "https://images.unsplash.com/photo-1550304943-4f24f54ddde9?q=80&w=800&fit=crop", desc: "Izgara tavuk, parmesan, kruton, hafif sezar sos." },
+  { id: 8, name: "Hellim & Ceviz", price: 140, cal: 330, cat: "Salata", image: "https://images.unsplash.com/photo-1529312266912-b33cf6227e2f?q=80&w=800&fit=crop", desc: "Kıbrıs hellimi, ceviz içi, akdeniz yeşillikleri." },
+  { id: 9, name: "Ton Balıklı Salata", price: 150, cal: 310, cat: "Salata", image: "https://images.unsplash.com/photo-1540420773420-3366772f4999?q=80&w=800&fit=crop", desc: "Ton balığı, mısır, dereotu, limon sos." },
+  { id: 10, name: "Buğdaylı Mercimek", price: 135, cal: 290, cat: "Salata", image: "https://images.unsplash.com/photo-1505253716362-afaea1d3d1af?q=80&w=800&fit=crop", desc: "Yeşil mercimek, buğday, nane, nar ekşisi." },
+
+  // WRAPS [cite: 176, 194]
+  { id: 11, name: "Humuslu Wrap", price: 140, cal: 390, cat: "Wrap", image: "https://images.unsplash.com/photo-1626700051175-6818013e1d4f?q=80&w=800&fit=crop", desc: "Ev yapımı humus, köz biber, roka." },
+  { id: 12, name: "Acılı Tavuk Wrap", price: 140, cal: 420, cat: "Wrap", image: "https://images.unsplash.com/photo-1604382354936-07c5d9983bd3?q=80&w=800&fit=crop", desc: "Meksika fasulyesi, tavuk, cheddar." },
+  { id: 13, name: "Dana Füme Wrap", price: 150, cal: 410, cat: "Wrap", image: "https://images.unsplash.com/photo-1529042410759-befb1204b468?q=80&w=800&fit=crop", desc: "Dana füme, kaşar peyniri, hardal sos." },
+  { id: 14, name: "Sebzeli Gökkuşağı", price: 135, cal: 320, cat: "Wrap", image: "https://images.unsplash.com/photo-1584650554177-5a1b0211a2eb?q=80&w=800&fit=crop", desc: "Izgara kabak, patlıcan, pesto sos." },
+  { id: 15, name: "Hindi Füme Sandviç", price: 130, cal: 300, cat: "Wrap", image: "https://images.unsplash.com/photo-1553909489-cd47e3b44043?q=80&w=800&fit=crop", desc: "Tam tahıllı ekmek, hindi füme, krem peynir." },
+
+  // SNACKS [cite: 176, 192]
+  { id: 16, name: "Fit Humus & Havuç", price: 110, cal: 180, cat: "Atıştırmalık", image: "https://images.unsplash.com/photo-1592417817098-8fd3d9eb14a5?q=80&w=800&fit=crop", desc: "Taze havuç dilimleri ve klasik humus." },
+  { id: 17, name: "Granola Yoğurt", price: 90, cal: 220, cat: "Atıştırmalık", image: "https://images.unsplash.com/photo-1488477181946-6428a029177b?q=80&w=800&fit=crop", desc: "Süzme yoğurt, ev yapımı granola, meyve." },
+  { id: 18, name: "Çiğ Kuruyemiş", price: 120, cal: 300, cat: "Atıştırmalık", image: "https://images.unsplash.com/photo-1599599810653-d8d080f043e9?q=80&w=800&fit=crop", desc: "Badem, kaju, ceviz karışımı." },
+  { id: 19, name: "Zeytinyağlı Yaprak", price: 115, cal: 250, cat: "Atıştırmalık", image: "https://images.unsplash.com/photo-1621669532736-392f12586a75?q=80&w=800&fit=crop", desc: "Limonlu ev tipi sarma." },
+  { id: 20, name: "Meyve Salatası", price: 100, cal: 120, cat: "Atıştırmalık", image: "https://images.unsplash.com/photo-1490474418585-ba9bad8fd0ea?q=80&w=800&fit=crop", desc: "Mevsim meyveleri." },
+
+  // DRINKS [cite: 176, 196]
+  { id: 21, name: "Green Detox", price: 70, cal: 120, cat: "İçecek", image: "https://images.unsplash.com/photo-1610970881699-44a5587cabec?q=80&w=800&fit=crop", desc: "Yeşil elma, ıspanak, kereviz sapı." },
+  { id: 22, name: "Taze Portakal", price: 70, cal: 140, cat: "İçecek", image: "https://images.unsplash.com/photo-1613478223719-2ab802602423?q=80&w=800&fit=crop", desc: "%100 sıkma portakal suyu." },
+  { id: 23, name: "Zencefilli Shot", price: 50, cal: 40, cat: "İçecek", image: "https://images.unsplash.com/photo-1567653418876-5bb0e566e1c2?q=80&w=800&fit=crop", desc: "Zencefil, zerdeçal, limon." },
+  { id: 24, name: "Soğuk Kahve", price: 60, cal: 80, cat: "İçecek", image: "https://images.unsplash.com/photo-1461023058943-07fcbe16d735?q=80&w=800&fit=crop", desc: "Cold brew, şekersiz." },
+  { id: 25, name: "Doğal Kaynak Suyu", price: 15, cal: 0, cat: "İçecek", image: "https://images.unsplash.com/photo-1564414291-276d22a50a60?q=80&w=800&fit=crop", desc: "330ml cam şişe." },
+];
+
+const LOCATIONS = [
+  { name: "Kanyon AVM", area: "Levent" }, { name: "Levent 199", area: "Levent" }, { name: "Maslak 42", area: "Maslak" }
 ];
 
 export default function App() {
+  // State
   const [isScrolled, setIsScrolled] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
-  const [locationOpen, setLocationOpen] = useState(false);
-  const [selectedLocation, setSelectedLocation] = useState(null);
+  const [loginOpen, setLoginOpen] = useState(false);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState("Tümü");
   const [cart, setCart] = useState([]);
+  const [user, setUser] = useState(null);
 
-  // Scroll Takibi
+  // Scroll Effect
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 50);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Sepet İşlemleri
+  // Functions
   const addToCart = (item) => {
-    if (!selectedLocation) {
-      setLocationOpen(true);
-      return;
-    }
     setCart(prev => {
       const exist = prev.find(i => i.id === item.id);
       return exist ? prev.map(i => i.id === item.id ? { ...i, qty: i.qty + 1 } : i) : [...prev, { ...item, qty: 1 }];
@@ -96,284 +75,238 @@ export default function App() {
     setCartOpen(true);
   };
 
-  const totalAmount = cart.reduce((acc, item) => acc + (item.price * item.qty), 0);
+  const handleLogin = (e) => {
+    e.preventDefault();
+    setUser({ name: "Atahan Arıcı", points: 1250 });
+    setLoginOpen(false);
+  };
+
+  const filteredItems = selectedCategory === "Tümü" ? MENU : MENU.filter(i => i.cat === selectedCategory);
 
   return (
-    <div className="bg-[#F9F8F4] text-[#1A3C34] min-h-screen selection:bg-[#1A3C34] selection:text-[#F4D03F]">
+    <div className="bg-[#F9F8F4] text-[#1A3C34] min-h-screen">
       
-      {/* --- NAVBAR (Farmer's Fridge Style) --- */}
-      <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${isScrolled ? 'bg-white/90 backdrop-blur-md py-4 shadow-sm' : 'bg-transparent py-8'}`}>
+      {/* --- NAVBAR --- */}
+      <nav className={`fixed top-0 w-full z-50 transition-all duration-500 ${isScrolled ? 'bg-white/95 backdrop-blur-md py-4 shadow-sm' : 'bg-transparent py-6'}`}>
         <div className="max-w-[1440px] mx-auto px-6 flex justify-between items-center">
-          
-          {/* Logo */}
-          <div className="flex items-center gap-1 cursor-pointer group" onClick={() => window.scrollTo(0,0)}>
-             <div className="w-10 h-10 bg-[#1A3C34] rounded-full flex items-center justify-center text-[#F4D03F] group-hover:rotate-12 transition-transform">
-               <Leaf size={20} fill="currentColor"/>
-             </div>
-             <span className="text-3xl font-serif font-bold tracking-tight text-[#1A3C34]">BeeCup</span>
+          <div className="flex items-center gap-2 cursor-pointer group" onClick={() => window.scrollTo(0,0)}>
+             <div className="w-10 h-10 bg-[#1A3C34] rounded-full flex items-center justify-center text-[#F4D03F] group-hover:rotate-12 transition-transform"><Leaf size={20} fill="currentColor"/></div>
+             <span className={`text-2xl font-serif font-bold tracking-tight ${isScrolled ? 'text-[#1A3C34]' : 'text-white'}`}>BeeCup</span>
           </div>
 
-          {/* Desktop Menu */}
-          <div className="hidden md:flex items-center gap-8 text-sm font-bold tracking-wider">
-             <a href="#menu" className="hover:text-[#C5A85F] transition-colors">MENÜ</a>
-             <a href="#nasil" className="hover:text-[#C5A85F] transition-colors">NASIL ÇALIŞIR?</a>
+          <div className={`hidden md:flex items-center gap-8 text-xs font-bold tracking-widest ${isScrolled ? 'text-[#1A3C34]' : 'text-white/80'}`}>
              <a href="#misyon" className="hover:text-[#C5A85F] transition-colors">MİSYON</a>
-             <button onClick={() => setLocationOpen(true)} className="hover:text-[#C5A85F] transition-colors">LOKASYONLAR</button>
+             <a href="#menu" className="hover:text-[#C5A85F] transition-colors">MENÜ</a>
+             <a href="#nasil" className="hover:text-[#C5A85F] transition-colors">TEKNOLOJİ</a>
           </div>
 
-          {/* Actions */}
           <div className="flex items-center gap-4">
-             {selectedLocation ? (
-                <div onClick={() => setLocationOpen(true)} className="hidden lg:flex cursor-pointer items-center gap-2 px-4 py-2 rounded-full bg-[#1A3C34]/5 hover:bg-[#1A3C34]/10 transition">
-                   <MapPin size={16}/>
-                   <span className="text-xs font-bold">{selectedLocation.name}</span>
-                   <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+             {user ? (
+                <div className={`flex items-center gap-2 px-4 py-2 rounded-full font-bold text-sm ${isScrolled ? 'bg-[#1A3C34]/10 text-[#1A3C34]' : 'bg-white/20 text-white'}`}>
+                   <User size={16}/> {user.name}
                 </div>
              ) : (
-                <button 
-                  onClick={() => setLocationOpen(true)}
-                  className="hidden lg:flex items-center gap-2 bg-[#1A3C34] text-[#F9F8F4] px-6 py-3 rounded-full text-xs font-bold tracking-widest hover:bg-[#2a5a4e] transition"
-                >
-                  OTOMAT BUL
-                </button>
+                <button onClick={() => setLoginOpen(true)} className={`text-xs font-bold tracking-wider hover:text-[#C5A85F] transition ${isScrolled ? 'text-[#1A3C34]' : 'text-white'}`}>GİRİŞ YAP</button>
              )}
-
-             <button onClick={() => setCartOpen(true)} className="relative p-2 hover:bg-black/5 rounded-full transition">
+             <button onClick={() => setCartOpen(true)} className={`relative p-2 rounded-full ${isScrolled ? 'text-[#1A3C34] hover:bg-black/5' : 'text-white hover:bg-white/10'}`}>
                 <ShoppingBag size={24}/>
-                {cart.length > 0 && <span className="absolute top-0 right-0 w-5 h-5 bg-[#C5A85F] text-white text-[10px] font-bold flex items-center justify-center rounded-full">{cart.length}</span>}
+                {cart.length > 0 && <span className="absolute -top-1 -right-1 w-4 h-4 bg-[#C5A85F] text-white text-[10px] font-bold flex items-center justify-center rounded-full">{cart.length}</span>}
              </button>
           </div>
         </div>
       </nav>
 
-      {/* --- HERO SECTION (Giant Visual) --- */}
-      <header className="relative pt-32 pb-20 px-6 min-h-[90vh] flex items-center">
-         <div className="max-w-[1440px] mx-auto w-full grid lg:grid-cols-2 gap-16 items-center">
-            
-            <div className="space-y-10 order-2 lg:order-1">
-               <h1 className="text-6xl md:text-8xl font-serif leading-[0.95] text-[#1A3C34]">
-                  Gerçek yemek. <br/>
-                  <span className="italic text-[#C5A85F]">Anında</span> seninle.
-               </h1>
-               <p className="text-xl text-[#1A3C34]/70 leading-relaxed max-w-md">
-                  Plaza hayatının hızına yetişen, şeflerin hazırladığı taze kaseler. 
-                  Sıra bekleme, QR okut, kapağı aç ve al.
+      {/* --- HERO SECTION (VIDEO BACKGROUND) --- */}
+      <header className="relative h-screen w-full flex items-center justify-center overflow-hidden">
+         <video autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover">
+            <source src="https://player.vimeo.com/external/434045526.sd.mp4?s=c27eecc69a27dbc4ff2b87d38af1e1e36317e49c&profile_id=164&oauth2_token_id=57447761" type="video/mp4" />
+         </video>
+         <div className="absolute inset-0 video-overlay"></div>
+         
+         <div className="relative z-10 text-center text-white px-6 max-w-4xl">
+            <motion.div initial={{opacity:0, y:30}} animate={{opacity:1, y:0}} transition={{duration:1}}>
+               <span className="inline-block py-1 px-4 border border-[#C5A85F] text-[#C5A85F] rounded-full text-xs font-bold tracking-[0.3em] mb-8">PREMIUM SMART VENDING</span>
+               <h1 className="text-6xl md:text-9xl font-serif leading-none mb-8">Doğal. <span className="text-[#C5A85F] italic">Akıllı.</span></h1>
+               <p className="text-xl text-gray-200 font-light mb-12 max-w-2xl mx-auto leading-relaxed">
+                  Teknoloji ve gastronomiyi birleştiren yeni nesil otomat deneyimi. 
+                  Uygulamadan seç, QR ile öde, asansör sistemi taze yemeğini sunsun.
                </p>
-               <div className="flex flex-col sm:flex-row gap-4">
-                  <button onClick={() => setLocationOpen(true)} className="bg-[#1A3C34] text-white px-10 py-4 rounded-full font-bold tracking-wider hover:scale-105 transition-transform shadow-xl">
-                     EN YAKIN OTOMATI BUL
-                  </button>
-                  <button onClick={() => document.getElementById('menu').scrollIntoView({behavior:'smooth'})} className="bg-white border-2 border-[#1A3C34]/10 text-[#1A3C34] px-10 py-4 rounded-full font-bold tracking-wider hover:border-[#1A3C34] transition-colors">
-                     MENÜYÜ GÖR
-                  </button>
+               <div className="flex justify-center gap-4">
+                  <a href="#menu" className="bg-[#C5A85F] text-[#1A3C34] px-10 py-4 rounded-full font-bold tracking-wider hover:bg-white transition-all shadow-xl">MENÜYÜ KEŞFET</a>
+                  <button onClick={() => setLoginOpen(true)} className="bg-white/10 backdrop-blur-md border border-white/30 text-white px-10 py-4 rounded-full font-bold tracking-wider hover:bg-white hover:text-[#1A3C34] transition-all">HESAP OLUŞTUR</button>
                </div>
-               <div className="flex items-center gap-8 text-sm font-bold text-[#1A3C34]/60 pt-8">
-                  <span className="flex items-center gap-2"><Check size={18} className="text-[#C5A85F]"/> Günlük Taze</span>
-                  <span className="flex items-center gap-2"><Check size={18} className="text-[#C5A85F]"/> 0 Atık</span>
-                  <span className="flex items-center gap-2"><Check size={18} className="text-[#C5A85F]"/> 7/24 Açık</span>
-               </div>
-            </div>
-
-            <div className="relative order-1 lg:order-2">
-               {/* Blob Background */}
-               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-[#C5A85F]/10 rounded-full blur-3xl -z-10"></div>
-               <img 
-                 src="https://images.unsplash.com/photo-1512621776951-a57141f2eefd?q=80&w=1000&fit=crop" 
-                 alt="Fresh Bowl" 
-                 className="w-full h-auto object-cover rounded-[3rem] shadow-2xl rotate-[-2deg] hover:rotate-0 transition-transform duration-700"
-               />
-               {/* Floating Badge */}
-               <div className="absolute bottom-10 -left-6 bg-white p-6 rounded-2xl shadow-xl max-w-[200px] hidden md:block animate-bounce" style={{animationDuration: '3s'}}>
-                  <div className="flex gap-1 mb-2">
-                     {[1,2,3,4,5].map(i => <Star key={i} size={14} className="fill-[#C5A85F] text-[#C5A85F]"/>)}
-                  </div>
-                  <p className="text-xs font-medium text-gray-500">"Ofiste yediğim en taze öğün!"</p>
-               </div>
-            </div>
-
+            </motion.div>
          </div>
       </header>
 
-      {/* --- MENU SECTION (Huge Cards) --- */}
-      <section id="menu" className="py-32 bg-white">
-         <div className="max-w-[1440px] mx-auto px-6">
-            <div className="text-center mb-20">
-               <span className="text-[#C5A85F] font-bold tracking-[0.2em] text-xs uppercase">06:00'DA ÜRETİLDİ</span>
-               <h2 className="text-5xl md:text-6xl font-serif mt-4 mb-6 text-[#1A3C34]">Dolapta Neler Var?</h2>
-               <div className="flex flex-wrap justify-center gap-4">
-                  {["Tümü", "Bowl", "Salata", "Wrap", "İçecek"].map(cat => (
-                     <button key={cat} className="px-6 py-2 rounded-full border border-gray-200 text-sm font-bold hover:bg-[#1A3C34] hover:text-white transition-colors">
-                        {cat}
-                     </button>
-                  ))}
-               </div>
+      {/* --- MİSYON SECTION [cite: 20, 22] --- */}
+      <section id="misyon" className="py-24 px-6 max-w-[1440px] mx-auto">
+         <div className="grid md:grid-cols-2 gap-16 items-center">
+            <div>
+               <span className="text-[#C5A85F] font-bold tracking-widest text-xs uppercase block mb-4">MİSYONUMUZ</span>
+               <h2 className="text-4xl md:text-5xl font-serif text-[#1A3C34] mb-6 leading-tight">Hızlı Yaşamda <br/>Sağlıklı Mola.</h2>
+               <p className="text-[#1A3C34]/70 text-lg leading-relaxed mb-6">
+                  BeeCup, yoğun şehir hayatında sağlıklı ve taze gıdaya erişimi demokratize etmek için doğdu. 
+                  Geleneksel otomatların aksine, biz sadece "gerçek yemek" sunuyoruz. Koruyucu yok, beklemiş ürün yok.
+               </p>
+               <ul className="space-y-4">
+                  <li className="flex items-center gap-3 text-[#1A3C34] font-bold"><Check className="text-[#C5A85F]"/> Sürdürülebilir & Yerel Malzemeler</li>
+                  <li className="flex items-center gap-3 text-[#1A3C34] font-bold"><Check className="text-[#C5A85F]"/> Sıfır Plastik Atık Politikası</li>
+                  <li className="flex items-center gap-3 text-[#1A3C34] font-bold"><Check className="text-[#C5A85F]"/> Akıllı Stok Yönetimi</li>
+               </ul>
             </div>
+            <div className="relative">
+               <img src="https://images.unsplash.com/photo-1498837167922-ddd27525d352?q=80&w=1000&fit=crop" className="rounded-[3rem] shadow-2xl w-full object-cover" alt="Misyon" />
+            </div>
+         </div>
+      </section>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-16">
-               {MENU.map(item => (
-                  <div key={item.id} className="group cursor-pointer">
-                     <div className="relative h-[450px] w-full overflow-hidden rounded-[2.5rem] mb-6 bg-[#F9F8F4]">
-                        <img src={item.image} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
-                        {/* Overlay Button */}
-                        <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                           <button 
-                             onClick={() => addToCart(item)}
-                             className="bg-white text-[#1A3C34] px-8 py-4 rounded-full font-bold transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 hover:bg-[#C5A85F]"
-                           >
-                              SEPETE EKLE - {item.price}₺
-                           </button>
-                        </div>
-                        <span className="absolute top-6 left-6 bg-white/90 backdrop-blur px-4 py-1.5 rounded-full text-xs font-bold tracking-wide text-[#1A3C34] uppercase">
-                           {item.cat}
-                        </span>
-                     </div>
-                     <div className="text-center px-4">
-                        <h3 className="text-2xl font-serif font-bold text-[#1A3C34] mb-2">{item.name}</h3>
-                        <p className="text-[#1A3C34]/60 text-sm leading-relaxed">{item.desc}</p>
-                        <div className="mt-4 inline-block border-b border-[#C5A85F] pb-0.5 text-xs font-bold text-[#C5A85F] tracking-widest">
-                           {item.cal} KCAL
-                        </div>
-                     </div>
-                  </div>
+      {/* --- NASIL ÇALIŞIR (ASANSÖR DETAYI) [cite: 171] --- */}
+      <section id="nasil" className="py-24 bg-[#1A3C34] text-[#F9F8F4] overflow-hidden">
+         <div className="max-w-[1440px] mx-auto px-6 text-center mb-16">
+            <h2 className="text-5xl font-serif mb-6">Teknoloji ile Tanışın</h2>
+            <p className="text-white/60 max-w-2xl mx-auto">BeeCup otomatları, ürünlerinizi düşürmeden, hassas asansör sistemiyle size ulaştırır.</p>
+         </div>
+         <div className="max-w-[1440px] mx-auto px-6 grid md:grid-cols-3 gap-10">
+            {[
+               { title: "Seç & Öde", desc: "App üzerinden veya 21.5\" dokunmatik ekrandan ürününü seç, QR veya kartla öde.", icon: <Smartphone size={32}/> },
+               { title: "Asansör Sistemi", desc: "Robotik asansör ilgili rafa gider, ürününü nazikçe alır ve alt hazneye indirir.", icon: <ArrowRight size={32}/> },
+               { title: "Afiyet Olsun", desc: "Hazneden ürününü al. Kabı geri getirmeyi unutma, puan kazan!", icon: <Leaf size={32}/> }
+            ].map((step, i) => (
+               <div key={i} className="bg-white/5 p-8 rounded-[2.5rem] border border-white/10 hover:bg-white/10 transition text-center">
+                  <div className="w-16 h-16 bg-[#C5A85F] rounded-full flex items-center justify-center mx-auto mb-6 text-[#1A3C34]">{step.icon}</div>
+                  <h3 className="text-2xl font-serif mb-3">{step.title}</h3>
+                  <p className="text-white/60 leading-relaxed">{step.desc}</p>
+               </div>
+            ))}
+         </div>
+      </section>
+
+      {/* --- MENU (25+ ITEMS) --- */}
+      <section id="menu" className="py-24 px-6 max-w-[1440px] mx-auto">
+         <div className="text-center mb-12">
+            <h2 className="text-5xl font-serif text-[#1A3C34] mb-8">Dolapta Neler Var?</h2>
+            <div className="flex flex-wrap justify-center gap-3">
+               {CATEGORIES.map(cat => (
+                  <button 
+                    key={cat} 
+                    onClick={() => setSelectedCategory(cat)}
+                    className={`px-6 py-2.5 rounded-full text-sm font-bold transition-all ${selectedCategory === cat ? 'bg-[#1A3C34] text-white shadow-lg' : 'bg-white text-gray-500 border border-gray-200 hover:border-[#1A3C34]'}`}
+                  >
+                     {cat}
+                  </button>
                ))}
             </div>
          </div>
-      </section>
 
-      {/* --- HOW IT WORKS (Step by Step) --- */}
-      <section id="nasil" className="py-32 bg-[#1A3C34] text-[#F9F8F4] overflow-hidden">
-         <div className="max-w-[1440px] mx-auto px-6 grid lg:grid-cols-2 gap-24 items-center">
-            <div className="relative">
-               <div className="absolute -inset-10 bg-[#C5A85F]/20 rounded-full blur-[80px]"></div>
-               <img src="https://images.unsplash.com/photo-1595853035070-59a39fe84de3?q=80&w=1000&fit=crop" className="relative z-10 rounded-[3rem] shadow-2xl rotate-3 hover:rotate-0 transition-transform duration-700" />
-            </div>
-            <div className="space-y-12">
-               <h2 className="text-5xl md:text-7xl font-serif">
-                  Sıra Yok.<br/> Kasa Yok.<br/> <span className="text-[#C5A85F] italic">Sadece Lezzet.</span>
-               </h2>
-               <div className="space-y-8">
-                  <div className="flex gap-6">
-                     <span className="text-5xl font-serif text-[#C5A85F]/40">01</span>
-                     <div>
-                        <h4 className="text-xl font-bold mb-2">Uygulamadan Seç</h4>
-                        <p className="text-white/60 leading-relaxed">Ofiste, yolda veya evde menüye göz at. Stokları canlı gör, siparişini oluştur.</p>
-                     </div>
+         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {MENU.filter(i => selectedCategory === "Tümü" || i.cat === selectedCategory).map((item) => (
+               <div key={item.id} className="group bg-white p-4 rounded-[2.5rem] shadow-sm hover:shadow-2xl transition-all duration-300 cursor-pointer border border-gray-100">
+                  <div className="relative h-64 rounded-[2rem] overflow-hidden mb-4">
+                     <img src={item.image} className="w-full h-full object-cover group-hover:scale-110 transition duration-700" alt={item.name} />
+                     <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-bold text-[#1A3C34] tracking-wide uppercase">{item.cat}</div>
                   </div>
-                  <div className="flex gap-6">
-                     <span className="text-5xl font-serif text-[#C5A85F]/40">02</span>
-                     <div>
-                        <h4 className="text-xl font-bold mb-2">QR Kodunu Okut</h4>
-                        <p className="text-white/60 leading-relaxed">Otomatın başına gel, uygulamadaki QR kodunu okuyucuya göster.</p>
+                  <div className="px-2 pb-2">
+                     <div className="flex justify-between items-start mb-2">
+                        <h3 className="text-lg font-serif font-bold text-[#1A3C34]">{item.name}</h3>
+                        <span className="text-lg font-black text-[#C5A85F]">₺{item.price}</span>
                      </div>
-                  </div>
-                  <div className="flex gap-6">
-                     <span className="text-5xl font-serif text-[#C5A85F]/40">03</span>
-                     <div>
-                        <h4 className="text-xl font-bold mb-2">Kapağı Aç ve Al</h4>
-                        <p className="text-white/60 leading-relaxed">Kapak otomatik açılır. Yemeğini al, afiyet olsun. Kabı geri getirmeyi unutma!</p>
-                     </div>
+                     <p className="text-xs text-gray-500 mb-4 line-clamp-2 h-8">{item.desc}</p>
+                     <button onClick={() => addToCart(item)} className="w-full bg-[#F9F8F4] text-[#1A3C34] py-3 rounded-xl font-bold text-xs hover:bg-[#1A3C34] hover:text-white transition flex items-center justify-center gap-2">SEPETE EKLE</button>
                   </div>
                </div>
-            </div>
+            ))}
          </div>
       </section>
 
-      {/* --- LOCATIONS DRAWER (Farmer's Fridge Style Sidebar) --- */}
-      {locationOpen && (
-        <div className="fixed inset-0 z-[60] flex justify-end">
-           <div className="absolute inset-0 bg-[#1A3C34]/60 backdrop-blur-sm" onClick={() => setLocationOpen(false)}></div>
-           <div className="relative w-full md:w-[500px] bg-white h-full shadow-2xl flex flex-col animate-[slideIn_0.3s_ease-out]">
-              <div className="p-8 border-b flex justify-between items-center bg-[#1A3C34] text-white">
-                 <h2 className="text-2xl font-serif">Lokasyonlar</h2>
-                 <button onClick={() => setLocationOpen(false)} className="p-2 hover:bg-white/20 rounded-full"><X/></button>
-              </div>
-              <div className="flex-1 overflow-y-auto p-8 space-y-4 bg-[#F9F8F4]">
-                 {LOCATIONS.map(loc => (
-                    <div 
-                      key={loc.id} 
-                      onClick={() => { setSelectedLocation(loc); setLocationOpen(false); }}
-                      className={`p-6 rounded-2xl bg-white shadow-sm border-2 cursor-pointer transition-all hover:border-[#1A3C34] group ${selectedLocation?.id === loc.id ? 'border-[#1A3C34]' : 'border-transparent'}`}
-                    >
-                       <div className="flex justify-between items-start mb-2">
-                          <h4 className="font-bold text-lg text-[#1A3C34]">{loc.name}</h4>
-                          <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wide ${loc.status === 'Açık' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>{loc.status}</span>
-                       </div>
-                       <p className="text-sm text-gray-500 mb-4">{loc.area} • {loc.type}</p>
-                       <div className="flex items-center gap-4 text-xs font-bold text-[#1A3C34]/60">
-                          <span className="flex items-center gap-1"><MapPin size={14}/> {loc.distance}</span>
-                          <span className="flex items-center gap-1">Stok: <span className={loc.stock === 'Yüksek' ? 'text-green-600' : 'text-orange-500'}>{loc.stock}</span></span>
-                       </div>
-                    </div>
-                 ))}
-              </div>
-           </div>
-        </div>
-      )}
-
-      {/* --- CART DRAWER --- */}
-      {cartOpen && (
-        <div className="fixed inset-0 z-[60] flex justify-end">
-           <div className="absolute inset-0 bg-[#1A3C34]/60 backdrop-blur-sm" onClick={() => setCartOpen(false)}></div>
-           <div className="relative w-full md:w-[450px] bg-white h-full shadow-2xl flex flex-col animate-[slideIn_0.3s_ease-out]">
-              <div className="p-8 border-b flex justify-between items-center">
-                 <h2 className="text-2xl font-serif text-[#1A3C34]">Sepetim ({cart.length})</h2>
-                 <button onClick={() => setCartOpen(false)} className="p-2 hover:bg-gray-100 rounded-full"><X/></button>
-              </div>
-              <div className="flex-1 overflow-y-auto p-8 space-y-6">
-                 {cart.length === 0 ? (
-                    <div className="h-full flex flex-col items-center justify-center text-gray-400 opacity-50">
-                       <ShoppingBag size={48} className="mb-4"/>
-                       <p>Henüz bir şey eklemedin.</p>
-                    </div>
-                 ) : (
-                    cart.map((item, idx) => (
-                       <div key={idx} className="flex items-center gap-4 border-b border-gray-100 pb-4">
-                          <img src={item.image} className="w-20 h-20 rounded-xl object-cover" />
-                          <div className="flex-1">
-                             <h4 className="font-bold text-[#1A3C34]">{item.name}</h4>
-                             <p className="text-sm text-gray-500">₺{item.price}</p>
-                          </div>
-                          <span className="font-bold text-[#1A3C34]">x{item.qty}</span>
-                       </div>
-                    ))
-                 )}
-              </div>
-              <div className="p-8 bg-[#F9F8F4]">
-                 <div className="flex justify-between mb-6 text-xl font-bold text-[#1A3C34]">
-                    <span>Toplam</span>
-                    <span>₺{totalAmount}</span>
-                 </div>
-                 <button className="w-full bg-[#1A3C34] text-white py-4 rounded-full font-bold tracking-wider hover:bg-[#2a5a4e] transition">
-                    ÖDEMEYE GEÇ
-                 </button>
-              </div>
-           </div>
-        </div>
-      )}
-
-      {/* Footer */}
-      <footer className="bg-[#1A3C34] text-white py-20 border-t border-white/10">
-         <div className="max-w-[1440px] mx-auto px-6 text-center">
-            <div className="flex justify-center items-center gap-2 mb-8">
-               <div className="w-8 h-8 bg-[#F4D03F] rounded-full flex items-center justify-center text-[#1A3C34]"><Leaf size={16} fill="currentColor"/></div>
-               <span className="text-2xl font-serif font-bold">BeeCup</span>
+      {/* --- FOOTER & APP LINKS --- */}
+      <footer className="bg-[#1A3C34] text-white pt-24 pb-12">
+         <div className="max-w-[1440px] mx-auto px-6">
+            <div className="grid md:grid-cols-2 gap-12 items-center border-b border-white/10 pb-16 mb-12">
+               <div>
+                  <h2 className="text-4xl font-serif mb-4">BeeCup App'i İndirin</h2>
+                  <p className="text-white/60 mb-8 max-w-md">Sipariş verin, puan kazanın, sürpriz indirimleri kaçırmayın.</p>
+                  <div className="flex gap-4">
+                     <button className="bg-white text-[#1A3C34] px-6 py-3 rounded-xl font-bold text-sm hover:bg-[#C5A85F] transition">APP STORE</button>
+                     <button className="bg-transparent border border-white/30 px-6 py-3 rounded-xl font-bold text-sm hover:bg-white/10 transition">GOOGLE PLAY</button>
+                  </div>
+               </div>
+               <div className="flex justify-end">
+                   <button onClick={() => setFeedbackOpen(true)} className="flex items-center gap-2 text-[#C5A85F] font-bold border-b border-[#C5A85F] pb-1 hover:text-white hover:border-white transition">
+                      <MessageSquare size={20}/> Görüş ve Önerilerinizi Yazın
+                   </button>
+               </div>
             </div>
-            <div className="flex flex-wrap justify-center gap-8 text-xs font-bold tracking-widest text-white/60 mb-12">
-               <a href="#" className="hover:text-white">KURUMSAL</a>
-               <a href="#" className="hover:text-white">KARİYER</a>
-               <a href="#" className="hover:text-white">GİZLİLİK</a>
-               <a href="#" className="hover:text-white">İLETİŞİM</a>
+            <div className="text-center text-white/30 text-xs">
+               &copy; 2025 BeeCup Smart Vending. Tüm hakları saklıdır.
             </div>
-            <p className="text-xs text-white/30">&copy; 2025 BeeCup Smart Vending.</p>
          </div>
       </footer>
 
-      <style>{`
-        @keyframes slideIn {
-          from { transform: translateX(100%); }
-          to { transform: translateX(0); }
-        }
-      `}</style>
+      {/* --- MODALS --- */}
+      
+      {/* Login Modal */}
+      <AnimatePresence>
+        {loginOpen && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+            <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setLoginOpen(false)}/>
+            <motion.div initial={{scale:0.9}} animate={{scale:1}} exit={{scale:0.9}} className="bg-white w-full max-w-md rounded-[2rem] p-8 relative z-[70]">
+               <button onClick={() => setLoginOpen(false)} className="absolute top-6 right-6 p-2 hover:bg-gray-100 rounded-full"><X/></button>
+               <h2 className="text-3xl font-serif font-bold text-[#1A3C34] mb-2">Giriş Yap</h2>
+               <p className="text-gray-500 text-sm mb-6">BeeCup dünyasına hoş geldin.</p>
+               <form onSubmit={handleLogin} className="space-y-4">
+                  <input className="w-full bg-[#F9F8F4] px-4 py-3 rounded-xl text-sm outline-none" placeholder="E-posta" type="email" required/>
+                  <input className="w-full bg-[#F9F8F4] px-4 py-3 rounded-xl text-sm outline-none" placeholder="Şifre" type="password" required/>
+                  <button className="w-full bg-[#1A3C34] text-white py-4 rounded-xl font-bold mt-4">GİRİŞ YAP</button>
+               </form>
+               <div className="mt-4 text-center text-xs text-gray-400">Hesabın yok mu? <span className="text-[#1A3C34] font-bold cursor-pointer">Kayıt Ol</span></div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Feedback Modal */}
+      <AnimatePresence>
+        {feedbackOpen && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+            <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setFeedbackOpen(false)}/>
+            <motion.div initial={{y:50}} animate={{y:0}} exit={{y:50}} className="bg-white w-full max-w-lg rounded-[2rem] p-8 relative z-[70]">
+               <button onClick={() => setFeedbackOpen(false)} className="absolute top-6 right-6"><X/></button>
+               <h2 className="text-2xl font-serif font-bold text-[#1A3C34] mb-4">Bize Yazın</h2>
+               <textarea className="w-full h-32 bg-[#F9F8F4] rounded-xl p-4 text-sm outline-none resize-none" placeholder="Görüş, öneri veya şikayetiniz..."></textarea>
+               <button onClick={() => setFeedbackOpen(false)} className="w-full bg-[#1A3C34] text-white py-3 rounded-xl font-bold mt-4 flex items-center justify-center gap-2"><Send size={16}/> GÖNDER</button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Cart Drawer */}
+      <AnimatePresence>
+        {cartOpen && (
+          <>
+            <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="fixed inset-0 bg-black/50 z-[60]" onClick={() => setCartOpen(false)}/>
+            <motion.div initial={{x:'100%'}} animate={{x:0}} exit={{x:'100%'}} className="fixed top-0 right-0 h-full w-full md:w-[450px] bg-white z-[70] shadow-2xl flex flex-col">
+               <div className="p-6 border-b flex justify-between items-center bg-[#1A3C34] text-white">
+                  <span className="font-serif text-xl">Sepetim ({cart.length})</span>
+                  <button onClick={() => setCartOpen(false)}><X/></button>
+               </div>
+               <div className="flex-1 p-6 overflow-y-auto space-y-4 bg-[#F9F8F4]">
+                  {cart.map((item, idx) => (
+                     <div key={idx} className="bg-white p-3 rounded-2xl flex gap-4 items-center shadow-sm">
+                        <img src={item.image} className="w-16 h-16 rounded-xl object-cover" />
+                        <div className="flex-1">
+                           <h4 className="font-bold text-[#1A3C34] text-sm">{item.name}</h4>
+                           <p className="text-xs text-gray-500">₺{item.price}</p>
+                        </div>
+                        <span className="font-bold text-[#1A3C34]">x{item.qty}</span>
+                     </div>
+                  ))}
+               </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
     </div>
   );
 }

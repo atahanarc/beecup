@@ -5,8 +5,8 @@
 @tailwind utilities;
 
 :root {
-  background-color: #F9F8F4; /* Farmer's Fridge Krem Rengi */
-  color: #1A3C34; /* Koyu Orman Yeşili */
+  background-color: #F9F8F4; /* Premium Krem */
+  color: #1A3C34; /* Marka Yeşili */
 }
 
 body {
@@ -17,10 +17,15 @@ body {
 }
 
 h1, h2, h3, h4, h5 {
-  font-family: 'Playfair Display', serif; /* O havalı, tırnaklı font */
+  font-family: 'Playfair Display', serif;
 }
 
-/* Scrollbar Gizleme ama kaydırma açık */
+/* Video Overlay */
+.video-overlay {
+  background: linear-gradient(to bottom, rgba(26, 60, 52, 0.6), rgba(26, 60, 52, 0.3));
+}
+
+/* Scrollbar Gizle */
 .scrollbar-hide::-webkit-scrollbar {
     display: none;
 }
