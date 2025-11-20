@@ -2,12 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { 
   ShoppingBag, Leaf, ArrowRight, Star, X, 
   MapPin, Sparkles, Plus, Minus, User, Lock, Mail, LogIn, 
-  Navigation, Smartphone, CheckCircle2, AlertCircle
+  Clock, CheckCircle2, Navigation
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // --- LOGO COMPONENT ---
-const BeeCupLogo = ({ color = "#1B4D3E" }) => (
+const BeeCupLogo = ({ color }) => (
   <div className="flex items-center gap-2">
     <div className="w-10 h-10 bg-[#F4D03F] rounded-xl flex items-center justify-center shadow-lg transform rotate-3">
       <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
@@ -15,16 +15,16 @@ const BeeCupLogo = ({ color = "#1B4D3E" }) => (
         <path d="M12 8V16M8 12H16" stroke="white" strokeWidth="3" strokeLinecap="round"/>
       </svg>
     </div>
-    <span className="text-2xl font-serif font-black tracking-tight" style={{ color: color }}>BeeCup</span>
+    <span className="text-2xl font-serif font-black tracking-tight transition-colors duration-300" style={{ color: color }}>BeeCup</span>
   </div>
 );
 
 // --- DATA ---
 const LOCATIONS = [
-  { id: 1, name: "Kanyon AVM", area: "Levent", distance: "120m", type: "Plaza Girişi", status: "Açık", stockLevel: "Yüksek" },
-  { id: 2, name: "Levent 199", area: "Levent", distance: "400m", type: "Lobi", status: "Açık", stockLevel: "Orta" },
-  { id: 3, name: "Maslak 42", area: "Maslak", distance: "2.1km", type: "Ofis Katı", status: "Açık", stockLevel: "Düşük" },
-  { id: 4, name: "İTÜ Arı Teknokent", area: "Maslak", distance: "3.5km", type: "Kampüs", status: "Bakımda", stockLevel: "Kapalı" },
+  { id: 1, name: "Kanyon AVM", area: "Levent", distance: "120m", type: "Plaza Girişi - Kat 1", status: "Açık", hours: "08:00 - 22:00", stockLevel: "Yüksek" },
+  { id: 2, name: "Levent 199", area: "Levent", distance: "400m", type: "Ana Lobi", status: "Açık", hours: "24 Saat", stockLevel: "Orta" },
+  { id: 3, name: "Maslak 42", area: "Maslak", distance: "2.1km", type: "Ofis Katı - Mutfak", status: "Açık", hours: "07:30 - 19:00", stockLevel: "Düşük" },
+  { id: 4, name: "İTÜ Arı Teknokent", area: "Maslak", distance: "3.5km", type: "ARI 3 Binası", status: "Bakımda", hours: "08:00 - 18:00", stockLevel: "Kapalı" },
 ];
 
 const MENU_ITEMS = [
@@ -41,7 +41,7 @@ const CATEGORIES = ["Tümü", "Bowl", "Wrap", "Salata", "Atıştırmalık", "İ�
 export default function App() {
   // --- STATE ---
   const [isScrolled, setIsScrolled] = useState(false);
-  const [selectedLocation, setSelectedLocation] = useState(null); // Seçilen Otomat
+  const [selectedLocation, setSelectedLocation] = useState(null);
   const [locationModalOpen, setLocationModalOpen] = useState(false);
   
   const [cartOpen, setCartOpen] = useState(false);
@@ -51,8 +51,7 @@ export default function App() {
   const [authMode, setAuthMode] = useState('login');
   const [user, setUser] = useState(null);
   
-  const [orderSuccess, setOrderSuccess] = useState(false); // QR Ekranı
-  
+  const [orderSuccess, setOrderSuccess] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("Tümü");
 
   // Scroll Listener
@@ -63,31 +62,18 @@ export default function App() {
   }, []);
 
   // --- FONKSİYONLAR ---
-
-  // Stok Simülasyonu: Her otomat için rastgele stok üretir
   const getStockForLocation = (itemId, locationId) => {
-    // Basit bir hash fonksiyonu ile konuma ve ürüne göre sabit stok üretelim
     const seed = itemId * locationId * 7;
-    const stock = seed % 8; // 0 ile 7 arası stok
-    return stock;
-  };
-
-  const handleStartOrder = () => {
-    if (selectedLocation) {
-      document.getElementById('menu').scrollIntoView({ behavior: 'smooth' });
-    } else {
-      setLocationModalOpen(true);
-    }
+    return seed % 8;
   };
 
   const selectLocation = (loc) => {
     if (loc.status === "Bakımda") {
-      alert("Bu otomat şu an bakımda, lütfen başka bir otomat seçin.");
+      alert("Bu otomat şu an bakımda.");
       return;
     }
     setSelectedLocation(loc);
     setLocationModalOpen(false);
-    // Menüye kaydır
     setTimeout(() => document.getElementById('menu').scrollIntoView({ behavior: 'smooth' }), 300);
   };
 
@@ -96,16 +82,6 @@ export default function App() {
       setLocationModalOpen(true);
       return;
     }
-    
-    const currentStock = getStockForLocation(item.id, selectedLocation.id);
-    const cartItem = cart.find(c => c.id === item.id);
-    const currentQty = cartItem ? cartItem.qty : 0;
-
-    if (currentQty >= currentStock) {
-      alert("Üzgünüz, bu otomatta bu üründen daha fazla kalmadı!");
-      return;
-    }
-
     setCart(prev => {
       const exist = prev.find(i => i.id === item.id);
       return exist ? prev.map(i => i.id === item.id ? { ...i, qty: i.qty + 1 } : i) : [...prev, { ...item, qty: 1 }];
@@ -119,7 +95,6 @@ export default function App() {
       setAuthMode('login');
       setAuthOpen(true);
     } else {
-      // Ödeme başarılı simülasyonu
       setCartOpen(false);
       setOrderSuccess(true);
     }
@@ -129,9 +104,7 @@ export default function App() {
     e.preventDefault();
     setUser({ name: "Atahan Arıcı", points: 1250 });
     setAuthOpen(false);
-    if (cart.length > 0) {
-      setCartOpen(true);
-    }
+    if (cart.length > 0) setCartOpen(true);
   };
 
   const filteredItems = selectedCategory === "Tümü" ? MENU_ITEMS : MENU_ITEMS.filter(i => i.category === selectedCategory);
@@ -150,35 +123,60 @@ export default function App() {
       <nav className={`fixed top-0 left-0 w-full z-50 transition-all duration-300 ${isScrolled ? 'bg-white/95 backdrop-blur-md shadow-md py-4' : 'bg-transparent py-6'}`}>
         <div className="max-w-[1400px] mx-auto px-6 flex justify-between items-center">
           
+          {/* Logo Rengi: Scroll yokken BEYAZ, Scroll varken YEŞİL */}
           <div className="cursor-pointer flex items-center gap-2" onClick={() => window.scrollTo(0,0)}>
-             <BeeCupLogo color={isScrolled ? "#1B4D3E" : "#1B4D3E"} /> 
-             {/* Masaüstünde seçili konumu göster */}
+             <BeeCupLogo color={isScrolled ? "#1B4D3E" : "#FFFFFF"} /> 
+             
+             {/* Seçili Konum (Navbar'da göster) */}
              {selectedLocation && (
-               <div className="hidden lg:flex items-center gap-2 ml-6 bg-[#1B4D3E]/10 px-3 py-1 rounded-full cursor-pointer hover:bg-[#1B4D3E]/20 transition" onClick={() => setLocationModalOpen(true)}>
-                 <MapPin size={14} className="text-[#1B4D3E]"/>
-                 <span className="text-xs font-bold text-[#1B4D3E]">{selectedLocation.name}</span>
-                 <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+               <div 
+                 className={`hidden lg:flex items-center gap-2 ml-6 px-3 py-1 rounded-full cursor-pointer transition border ${isScrolled ? 'bg-[#1B4D3E]/10 text-[#1B4D3E] border-transparent' : 'bg-white/20 text-white border-white/30'}`}
+                 onClick={() => setLocationModalOpen(true)}
+               >
+                 <MapPin size={14}/>
+                 <span className="text-xs font-bold">{selectedLocation.name}</span>
+                 <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.8)]"></span>
                </div>
              )}
           </div>
 
+          <div className="hidden md:flex items-center gap-8">
+             {/* Linkler: Scroll yokken BEYAZ, Scroll varken YEŞİL */}
+             {['MENÜ', 'LOKASYONLAR', 'TEKNOLOJİ'].map(item => (
+               <button key={item} onClick={() => document.getElementById('menu').scrollIntoView({behavior:'smooth'})} 
+                 className={`text-xs font-bold tracking-widest hover:text-[#F4D03F] transition-colors ${isScrolled ? 'text-[#1B4D3E]' : 'text-white'}`}
+               >
+                 {item}
+               </button>
+             ))}
+          </div>
+
           <div className="flex items-center gap-4">
-             {/* Otomat Bul Butonu (Mobilde Görünür) */}
-             <button onClick={() => setLocationModalOpen(true)} className="lg:hidden p-2 bg-white rounded-full shadow-sm text-[#1B4D3E]">
+             {/* Otomat Bul Butonu (Her zaman görünür) */}
+             <button 
+               onClick={() => setLocationModalOpen(true)} 
+               className={`p-2 rounded-full shadow-sm hover:scale-110 transition ${isScrolled ? 'bg-[#1B4D3E] text-white' : 'bg-white text-[#1B4D3E]'}`}
+               title="Otomat Bul"
+             >
                <MapPin size={20}/>
              </button>
 
-             {/* User & Cart */}
+             {/* Login Butonu */}
              {user ? (
-               <div className="hidden md:flex items-center gap-2 bg-[#1B4D3E]/10 px-4 py-2 rounded-full">
-                  <User size={16} className="text-[#1B4D3E]"/>
-                  <span className="text-sm font-bold text-[#1B4D3E]">{user.name}</span>
+               <div className={`hidden md:flex items-center gap-2 px-4 py-2 rounded-full ${isScrolled ? 'bg-[#1B4D3E]/10 text-[#1B4D3E]' : 'bg-white/20 text-white'}`}>
+                  <User size={16}/>
+                  <span className="text-sm font-bold">{user.name}</span>
                </div>
              ) : (
-               <button onClick={() => { setAuthMode('login'); setAuthOpen(true); }} className="hidden md:block text-xs font-bold text-[#1B4D3E] hover:text-[#F4D03F] transition">GİRİŞ YAP</button>
+               <button 
+                 onClick={() => { setAuthMode('login'); setAuthOpen(true); }} 
+                 className={`hidden md:block text-xs font-bold hover:text-[#F4D03F] transition ${isScrolled ? 'text-[#1B4D3E]' : 'text-white'}`}
+               >
+                 GİRİŞ YAP
+               </button>
              )}
 
-             <button onClick={() => setCartOpen(true)} className="relative p-2 bg-white rounded-full shadow-sm hover:shadow-md transition text-[#1B4D3E]">
+             <button onClick={() => setCartOpen(true)} className={`relative p-2 rounded-full shadow-sm hover:shadow-md transition ${isScrolled ? 'bg-[#1B4D3E] text-white' : 'bg-white text-[#1B4D3E]'}`}>
                 <ShoppingBag size={20}/>
                 {cart.length > 0 && <span className="absolute -top-1 -right-1 w-4 h-4 bg-[#F4D03F] text-black text-[10px] font-bold flex items-center justify-center rounded-full">{cart.length}</span>}
              </button>
@@ -205,8 +203,8 @@ export default function App() {
              </p>
              
              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <button onClick={handleStartOrder} className="bg-[#F4D03F] text-[#1B4D3E] px-10 py-4 rounded-full font-bold text-sm tracking-wider shadow-xl hover:bg-white transition-all transform hover:-translate-y-1 flex items-center justify-center gap-2">
-                   <MapPin size={18}/> OTOMAT BUL & SİPARİŞ VER
+                <button onClick={() => setLocationModalOpen(true)} className="bg-[#F4D03F] text-[#1B4D3E] px-10 py-4 rounded-full font-bold text-sm tracking-wider shadow-xl hover:bg-white transition-all transform hover:-translate-y-1 flex items-center justify-center gap-2">
+                   <MapPin size={18}/> EN YAKIN OTOMATI BUL
                 </button>
              </div>
            </motion.div>
@@ -218,18 +216,20 @@ export default function App() {
          <div className="max-w-[1400px] mx-auto">
             <div className="text-center mb-12">
                {selectedLocation ? (
-                 <div className="inline-flex items-center gap-2 bg-[#1B4D3E] text-white px-4 py-2 rounded-full mb-6 animate-pulse">
-                   <MapPin size={16}/>
-                   <span className="font-bold">{selectedLocation.name} Stokları Görüntüleniyor</span>
+                 <div className="inline-flex items-center gap-2 bg-[#1B4D3E] text-white px-6 py-3 rounded-full mb-6 shadow-lg">
+                   <MapPin size={18} className="text-[#F4D03F]"/>
+                   <span className="font-bold">{selectedLocation.name}</span>
+                   <span className="text-white/60 text-sm">|</span>
+                   <span className="text-sm text-[#F4D03F] font-medium">Stoklar Canlı</span>
                  </div>
                ) : (
-                 <div className="inline-flex items-center gap-2 bg-gray-200 text-gray-600 px-4 py-2 rounded-full mb-6">
-                   <AlertCircle size={16}/>
-                   <span className="font-bold">Lütfen stok görmek için otomat seçin</span>
+                 <div className="inline-flex items-center gap-2 bg-gray-200 text-gray-600 px-4 py-2 rounded-full mb-6 animate-bounce cursor-pointer" onClick={() => setLocationModalOpen(true)}>
+                   <MapPin size={16}/>
+                   <span className="font-bold">Lütfen önce otomat seçin</span>
                  </div>
                )}
 
-               <h2 className="text-5xl font-serif text-[#1B4D3E] mb-4">Canlı Menü</h2>
+               <h2 className="text-5xl font-serif text-[#1B4D3E] mb-8">Canlı Menü</h2>
                
                <div className="flex flex-wrap justify-center gap-3">
                  {CATEGORIES.map(cat => (
@@ -240,7 +240,6 @@ export default function App() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                {filteredItems.map((item) => {
-                  // Seçili otomat varsa stok hesapla, yoksa varsayılan göster
                   const stock = selectedLocation ? getStockForLocation(item.id, selectedLocation.id) : null;
                   const isOutOfStock = selectedLocation && stock === 0;
 
@@ -255,7 +254,7 @@ export default function App() {
                        <div className="relative h-64 rounded-[1.5rem] overflow-hidden mb-4">
                           <img src={item.image} className="w-full h-full object-cover group-hover:scale-110 transition duration-700" />
                           {isOutOfStock && (
-                            <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                            <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-10">
                               <span className="bg-red-600 text-white px-4 py-2 rounded-full font-bold text-sm transform -rotate-12 border-2 border-white">TÜKENDİ</span>
                             </div>
                           )}
@@ -267,8 +266,7 @@ export default function App() {
                              <span className="text-lg font-black text-[#F4D03F]">₺{item.price}</span>
                           </div>
                           
-                          {/* STOK GÖSTERGESİ */}
-                          <div className="flex items-center gap-2 mb-4">
+                          <div className="flex items-center gap-2 mb-4 min-h-[24px]">
                              {selectedLocation ? (
                                <>
                                  <div className={`w-2 h-2 rounded-full ${stock > 3 ? 'bg-green-500' : (stock > 0 ? 'bg-orange-500' : 'bg-red-500')}`}></div>
@@ -296,38 +294,55 @@ export default function App() {
          </div>
       </section>
 
-      {/* --- LOCATION SELECTOR MODAL --- */}
+      {/* --- LOCATION SELECTOR MODAL (YENİLENMİŞ TASARIM) --- */}
       <AnimatePresence>
         {locationModalOpen && (
-          <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
-            <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setLocationModalOpen(false)}/>
-            <motion.div initial={{scale:0.9}} animate={{scale:1}} exit={{scale:0.9}} className="bg-white w-full max-w-2xl rounded-[2.5rem] p-8 relative z-[80] shadow-2xl max-h-[90vh] overflow-y-auto">
-               <button onClick={() => setLocationModalOpen(false)} className="absolute top-6 right-6 p-2 hover:bg-gray-100 rounded-full"><X/></button>
+          <div className="fixed inset-0 z-[80] flex items-center justify-center p-4">
+            <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="absolute inset-0 bg-[#1B4D3E]/80 backdrop-blur-sm" onClick={() => setLocationModalOpen(false)}/>
+            <motion.div initial={{scale:0.9, opacity:0}} animate={{scale:1, opacity:1}} exit={{scale:0.9, opacity:0}} className="bg-white w-full max-w-3xl rounded-[2.5rem] p-8 relative z-[90] shadow-2xl max-h-[85vh] overflow-y-auto">
                
-               <h2 className="text-3xl font-serif font-bold text-[#1B4D3E] mb-2">BeeCup Noktanı Seç</h2>
-               <p className="text-gray-500 mb-8">Siparişini hazırlamamız için hangi otomatı kullanacağını seçmelisin.</p>
+               <div className="flex justify-between items-center mb-6">
+                  <div>
+                    <h2 className="text-3xl font-serif font-bold text-[#1B4D3E]">Lokasyon Seçimi</h2>
+                    <p className="text-gray-500 text-sm mt-1">Size en yakın BeeCup noktasını seçerek stokları görüntüleyin.</p>
+                  </div>
+                  <button onClick={() => setLocationModalOpen(false)} className="p-2 bg-gray-100 rounded-full hover:bg-gray-200 transition"><X/></button>
+               </div>
 
                <div className="grid gap-4">
                   {LOCATIONS.map((loc) => (
                     <div 
                       key={loc.id} 
                       onClick={() => selectLocation(loc)}
-                      className={`p-6 rounded-3xl border-2 cursor-pointer transition-all flex items-center justify-between group ${selectedLocation?.id === loc.id ? 'border-[#1B4D3E] bg-[#1B4D3E]/5' : 'border-gray-100 hover:border-[#1B4D3E]/30 hover:bg-gray-50'} ${loc.status === 'Bakımda' ? 'opacity-60' : ''}`}
+                      className={`group p-6 rounded-3xl border-2 cursor-pointer transition-all flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 ${selectedLocation?.id === loc.id ? 'border-[#1B4D3E] bg-[#F2F0E9]' : 'border-gray-100 hover:border-[#1B4D3E]/30 hover:shadow-md'}`}
                     >
-                       <div className="flex items-center gap-4">
-                          <div className={`w-12 h-12 rounded-full flex items-center justify-center ${selectedLocation?.id === loc.id ? 'bg-[#1B4D3E] text-white' : 'bg-[#F2F0E9] text-[#1B4D3E]'}`}>
+                       <div className="flex items-start gap-4">
+                          <div className={`w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0 ${selectedLocation?.id === loc.id ? 'bg-[#1B4D3E] text-white' : 'bg-[#F2F0E9] text-[#1B4D3E]'}`}>
                              <MapPin size={24}/>
                           </div>
                           <div>
-                             <h4 className="font-bold text-lg text-[#1B4D3E]">{loc.name}</h4>
-                             <p className="text-sm text-gray-500">{loc.area} • {loc.type} • <span className="text-[#1B4D3E] font-bold">{loc.distance}</span></p>
+                             <h4 className="font-bold text-xl text-[#1B4D3E]">{loc.name}</h4>
+                             <p className="text-sm text-gray-500 font-medium">{loc.area} • {loc.type}</p>
+                             
+                             <div className="flex items-center gap-4 mt-2">
+                               <div className="flex items-center gap-1 text-xs text-gray-500">
+                                 <Clock size={14}/> {loc.hours}
+                               </div>
+                               <div className="flex items-center gap-1 text-xs text-gray-500">
+                                 <Navigation size={14}/> {loc.distance}
+                               </div>
+                             </div>
                           </div>
                        </div>
-                       <div className="flex flex-col items-end gap-2">
-                          <span className={`px-3 py-1 rounded-full text-xs font-bold ${loc.status === 'Açık' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+
+                       <div className="flex items-center gap-4 w-full sm:w-auto justify-between sm:justify-end">
+                          <div className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold ${loc.status === 'Açık' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                             <div className={`w-2 h-2 rounded-full ${loc.status === 'Açık' ? 'bg-green-600 animate-pulse' : 'bg-red-600'}`}></div>
                              {loc.status}
-                          </span>
-                          <ChevronRight className={`text-gray-300 group-hover:text-[#1B4D3E] transition ${selectedLocation?.id === loc.id ? 'text-[#1B4D3E]' : ''}`}/>
+                          </div>
+                          <button className={`w-10 h-10 rounded-full flex items-center justify-center transition ${selectedLocation?.id === loc.id ? 'bg-[#1B4D3E] text-white' : 'bg-gray-100 text-gray-400 group-hover:bg-[#1B4D3E] group-hover:text-white'}`}>
+                             <ChevronRight size={20}/>
+                          </button>
                        </div>
                     </div>
                   ))}
@@ -340,12 +355,12 @@ export default function App() {
       {/* --- LOGIN MODAL --- */}
       <AnimatePresence>
         {authOpen && (
-          <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-[80] flex items-center justify-center p-4">
             <motion.div initial={{opacity:0}} animate={{opacity:1}} exit={{opacity:0}} className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setAuthOpen(false)}/>
-            <motion.div initial={{y:20, opacity:0}} animate={{y:0, opacity:1}} exit={{y:20, opacity:0}} className="bg-white w-full max-w-md rounded-[2rem] p-8 relative z-[80] shadow-2xl">
+            <motion.div initial={{y:20, opacity:0}} animate={{y:0, opacity:1}} exit={{y:20, opacity:0}} className="bg-white w-full max-w-md rounded-[2rem] p-8 relative z-[90] shadow-2xl">
                <button onClick={() => setAuthOpen(false)} className="absolute top-6 right-6 p-2 hover:bg-gray-100 rounded-full"><X/></button>
                <div className="text-center mb-6">
-                  <div className="flex justify-center mb-4"><BeeCupLogo/></div>
+                  <div className="flex justify-center mb-4"><BeeCupLogo color="#1B4D3E"/></div>
                   <h2 className="text-2xl font-bold text-[#1B4D3E]">{authMode === 'login' ? 'Giriş Yap' : 'Hesap Oluştur'}</h2>
                </div>
                <form onSubmit={handleLogin} className="space-y-4">
@@ -380,7 +395,6 @@ export default function App() {
                 
                 <div className="bg-gray-900 p-4 rounded-3xl inline-block shadow-xl mb-6">
                    <div className="bg-white p-2 rounded-2xl">
-                      {/* Fake QR Code */}
                       <img src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=BEECUP-${Math.random()}`} className="w-48 h-48 rounded-xl" alt="QR Code"/>
                    </div>
                 </div>
@@ -426,6 +440,17 @@ export default function App() {
           </>
         )}
       </AnimatePresence>
+
+      {/* Footer */}
+      <footer className="bg-[#1B4D3E] text-white py-12 text-center mt-20">
+        <div className="flex justify-center mb-6 opacity-80"><BeeCupLogo color="white"/></div>
+        <div className="flex justify-center gap-8 text-xs font-bold tracking-widest text-white/50 mb-8">
+          <a href="#" className="hover:text-white">KURUMSAL</a>
+          <a href="#" className="hover:text-white">GİZLİLİK</a>
+          <a href="#" className="hover:text-white">İLETİŞİM</a>
+        </div>
+        <p className="text-xs text-white/30">&copy; 2025 BeeCup Smart Vending. İstanbul.</p>
+      </footer>
 
     </div>
   );
