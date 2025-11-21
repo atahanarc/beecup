@@ -17,14 +17,16 @@ const ADMIN_EMAIL = "info@beecupco.com";
 const apiKey = "AIzaSyAx9MQ8BZd3nzp9yTddorJ5w2ttYYlOSIw";
 
 // --- EMAILJS AYARLARI ---
+// Not: Service ID'niz "service_fqmhoei" ise burası doğrudur. 
+// Farklıysa EmailJS panelinden kontrol edip burayı güncelleyin.
 const EMAILJS_CONFIG = {
-  SERVICE_ID: "service_fqmhoei", // Varsayılan servis ID (Değiştiyse güncelle)
-  TEMPLATE_ID_WELCOME: "template_7fj3mce", // Verdiğin Template ID
-  TEMPLATE_ID_FEEDBACK: "template_7fj3mce", // İkinci bir template yoksa aynısını kullanır
-  PUBLIC_KEY: "_m2hMVBLwxednDRNg" // Verdiğin Public Key
+  SERVICE_ID: "service_fqmhoei", 
+  TEMPLATE_ID_WELCOME: "template_7fj3mce", 
+  TEMPLATE_ID_FEEDBACK: "template_7fj3mce",
+  PUBLIC_KEY: "_m2hMVBLwxednDRNg"
 };
 
-// --- FIREBASE KURULUMU (SENİN VERİTABANIN) ---
+// --- FIREBASE KURULUMU ---
 const firebaseConfig = {
   apiKey: "AIzaSyAxOqxvqD72VOqCKKl-dH2I-VkUhJonslA",
   authDomain: "beecup-5ad27.firebaseapp.com",
@@ -45,8 +47,6 @@ try {
 } catch (e) {
   console.error("Firebase başlatılamadı:", e);
 }
-
-const appId = "beecup-web-app";
 
 // --- RENK PALETİ ---
 const COLORS = {
@@ -118,8 +118,6 @@ const FULL_MENU = [
     ingredients: "Meksika fasulyesi, mısır, jalapeno turşusu, guacamole, domates salsa, esmer pirinç.",
     macros: { protein: "18g", carbs: "60g", fat: "20g" }
   },
-
-  // SALATALAR
   { 
     id: 201, cat: "Salata", name: "Sezar Klasik", price: 170, kcal: 350, isPopular: true,
     imgPackaged: "https://images.unsplash.com/photo-1620917670397-a331343d3c64?auto=format&fit=crop&q=80&w=500", 
@@ -160,8 +158,6 @@ const FULL_MENU = [
     ingredients: "Bebek ıspanak, dilimlenmiş yeşil elma, kereviz sapı, salatalık, maydanoz, limon sosu.",
     macros: { protein: "5g", carbs: "25g", fat: "8g" }
   },
-
-  // WRAPS
   { 
     id: 301, cat: "Wrap", name: "Hindi Füme", price: 160, kcal: 380, isPopular: true,
     imgPackaged: "https://images.unsplash.com/photo-1625937329053-2db3839846c8?auto=format&fit=crop&q=80&w=500", 
@@ -181,15 +177,11 @@ const FULL_MENU = [
   { id: 303, cat: "Wrap", name: "Acılı Karnabahar", price: 155, kcal: 320, imgPackaged: "https://images.unsplash.com/photo-1625937329053-2db3839846c8?auto=format&fit=crop&q=80&w=500", imgPlated: "https://images.unsplash.com/photo-1628840042765-356cda07504e?w=500", tags: ["Vejeteryan", "Acılı"], desc: "Baharatlı karnabahar, yoğurt sos, marul.", ingredients: "Fırınlanmış acı soslu karnabahar, süzme yoğurt sos, marul, lavaş.", macros: { protein: "8g", carbs: "35g", fat: "14g" } },
   { id: 304, cat: "Wrap", name: "Tavuk Sezar Wrap", price: 165, kcal: 400, imgPackaged: "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?auto=format&fit=crop&q=80&w=500", imgPlated: "https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=500", tags: ["Yüksek Protein"], desc: "Izgara tavuk, parmesan, sezar sos.", ingredients: "Izgara tavuk dilimleri, parmesan peyniri, sezar sos, marul, lavaş.", macros: { protein: "30g", carbs: "30g", fat: "18g" } },
   { id: 305, cat: "Wrap", name: "Thai Sebzeli", price: 160, kcal: 360, imgPackaged: "https://images.unsplash.com/photo-1625937329053-2db3839846c8?auto=format&fit=crop&q=80&w=500", imgPlated: "https://images.unsplash.com/photo-1559563362-c667ba5f5480?w=500", tags: ["Vegan"], desc: "Tofu, renkli biberler, yer fıstığı sosu.", ingredients: "Tofu, kırmızı ve sarı biber, taze soğan, yer fıstığı sosu, lavaş.", macros: { protein: "15g", carbs: "40g", fat: "16g" } },
-
-  // ATIŞTIRMALIK
   { id: 401, cat: "Atıştırmalık", name: "Elma & Fıstık Ezmesi", price: 60, kcal: 190, imgPackaged: "https://images.unsplash.com/photo-1584559582128-b8be43b4342b?w=500", imgPlated: "https://images.unsplash.com/photo-1576675784432-994941412b3d?w=500", tags: ["Vegan"], desc: "Yeşil elma dilimleri, şekersiz fıstık ezmesi.", ingredients: "Granny Smith elma, %100 şekersiz fıstık ezmesi.", macros: { protein: "6g", carbs: "20g", fat: "10g" } },
   { id: 402, cat: "Atıştırmalık", name: "Humus & Kraker", price: 70, kcal: 240, imgPackaged: "https://images.unsplash.com/photo-1584559582128-b8be43b4342b?w=500", imgPlated: "https://images.unsplash.com/photo-1577805947697-89e18249d767?w=500", tags: ["Vegan"], desc: "Ev yapımı humus, tam tahıllı kraker.", ingredients: "Nohut, tahin, limon, zeytinyağı, tam buğday kraker.", macros: { protein: "8g", carbs: "30g", fat: "12g" } },
   { id: 403, cat: "Atıştırmalık", name: "Protein Topları", price: 55, kcal: 180, imgPackaged: "https://images.unsplash.com/photo-1584559582128-b8be43b4342b?w=500", imgPlated: "https://images.unsplash.com/photo-1604382354936-07c5d9983bd3?w=500", tags: ["Yüksek Protein"], desc: "Hurma, kakao, fındık topları.", ingredients: "Hurma püresi, kakao, fındık parçaları, whey protein tozu.", macros: { protein: "10g", carbs: "20g", fat: "8g" } },
   { id: 404, cat: "Atıştırmalık", name: "Chia Puding", price: 90, kcal: 220, isPopular: true, imgPackaged: "https://images.unsplash.com/photo-1579353977828-2a4eab54c8fa?auto=format&fit=crop&q=80&w=500", imgPlated: "https://images.unsplash.com/photo-1584559582128-b8be43b4342b?w=500", tags: ["Tatlı", "Vegan"], desc: "Hindistan cevizi sütü, chia, meyve.", ingredients: "Hindistan cevizi sütü, chia tohumu, agave şurubu, orman meyveleri.", macros: { protein: "6g", carbs: "25g", fat: "12g" } },
   { id: 405, cat: "Atıştırmalık", name: "Çiğ Kuruyemiş", price: 80, kcal: 260, imgPackaged: "https://images.unsplash.com/photo-1584559582128-b8be43b4342b?w=500", imgPlated: "https://images.unsplash.com/photo-1505576391880-b3f9d713dc4f?w=500", tags: ["Vegan"], desc: "Badem, kaju, ceviz karışımı.", ingredients: "Çiğ badem, çiğ kaju, ceviz içi.", macros: { protein: "10g", carbs: "8g", fat: "22g" } },
-
-  // İÇECEKLER
   { id: 501, cat: "İçecek", name: "Green Juice", price: 85, kcal: 110, isPopular: true, imgPackaged: "https://images.unsplash.com/photo-1610970881699-44a5587cabec?w=500", imgPlated: "https://images.unsplash.com/photo-1610970881699-44a5587cabec?w=500", tags: ["Detox"], desc: "Ispanak, elma, limon, zencefil suyu.", ingredients: "Soğuk sıkım ıspanak, yeşil elma, salatalık, limon, zencefil.", macros: { protein: "2g", carbs: "26g", fat: "0g" } },
   { id: 502, cat: "İçecek", name: "Kombucha", price: 90, kcal: 40, imgPackaged: "https://images.unsplash.com/photo-1622597467961-f052d33a9080?w=500", imgPlated: "https://images.unsplash.com/photo-1622597467961-f052d33a9080?w=500", tags: ["Probiyotik"], desc: "Doğal fermente çay.", ingredients: "Fermante siyah çay, şeker, probiyotik kültür.", macros: { protein: "0g", carbs: "10g", fat: "0g" } },
   { id: 503, cat: "İçecek", name: "Zencefil Shot", price: 55, kcal: 20, imgPackaged: "https://images.unsplash.com/photo-1600271886742-f049cd451bba?w=500", imgPlated: "https://images.unsplash.com/photo-1600271886742-f049cd451bba?w=500", tags: ["Bağışıklık"], desc: "%100 zencefil ve limon suyu.", ingredients: "Taze zencefil suyu, limon suyu, zerdeçal, karabiber.", macros: { protein: "0g", carbs: "5g", fat: "0g" } },
@@ -370,7 +362,6 @@ const AuthModal = ({ type, onClose }) => {
   const [showPassword, setShowPassword] = useState(false);
 
   const sendWelcomeEmail = (userName, userEmail) => {
-    // EmailJS ile gönderme (Aktif)
     if (EMAILJS_CONFIG.PUBLIC_KEY) {
       emailjs.send(
         EMAILJS_CONFIG.SERVICE_ID,
@@ -393,12 +384,22 @@ const AuthModal = ({ type, onClose }) => {
     setError('');
     try {
       if (isLogin) {
+        // Giriş İşlemi
         await signInWithEmailAndPassword(auth, email, password);
       } else {
+        // Kayıt İşlemi
         const cred = await createUserWithEmailAndPassword(auth, email, password);
         await updateProfile(cred.user, { displayName: fullName });
         if (db) {
-           await setDoc(doc(db, 'artifacts', appId, 'users', cred.user.uid, 'profile'), { fullName, email, createdAt: new Date() });
+           // --- DÜZELTME BURADA YAPILDI ---
+           // Artık veritabanı yolu 'users' koleksiyonunun altına doğrudan user ID ile yazılıyor.
+           // Bu sayede "Invalid document reference" hatası çözülmüş oluyor.
+           await setDoc(doc(db, 'users', cred.user.uid), { 
+             fullName, 
+             email, 
+             createdAt: new Date(),
+             role: 'customer'
+           });
         }
         // Kayıt başarılıysa mail gönder
         sendWelcomeEmail(fullName, email);
@@ -406,7 +407,7 @@ const AuthModal = ({ type, onClose }) => {
       onClose();
     } catch (err) {
       let msg = "Bir hata oluştu.";
-      if (err.code === 'auth/email-already-in-use') msg = "Bu e-posta zaten kullanımda.";
+      if (err.code === 'auth/email-already-in-use') msg = "Bu e-posta zaten kullanımda. Lütfen farklı bir adres deneyin.";
       else if (err.code === 'auth/weak-password') msg = "Şifre en az 6 karakter olmalı.";
       else if (err.code === 'auth/invalid-email') msg = "Geçersiz e-posta adresi.";
       else if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') msg = "E-posta veya şifre hatalı.";
@@ -460,7 +461,8 @@ const FeedbackSection = () => {
     setStatus('loading');
     try {
         if (db) {
-          await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'feedback'), {
+          // --- DÜZELTME: Veritabanı yolu basitleştirildi ---
+          await addDoc(collection(db, 'feedback'), {
               name, email, message: msg, createdAt: new Date()
           });
         }
@@ -474,7 +476,7 @@ const FeedbackSection = () => {
 
     } catch (e) {
         console.error("Feedback error:", e);
-        // DB hatası olsa bile mail gitmiş olabilir, kullanıcıya success gösterelim
+        // DB hatası olsa bile mail gitmiş olabilir
         setStatus('success');
         setTimeout(() => setStatus(null), 3000);
     }
