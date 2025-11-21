@@ -1,11 +1,23 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapPin, Menu, X, ChevronDown, Leaf, ArrowRight, Sparkles, Send, User, LogIn, ShoppingBag, Phone, MessageCircle, Check, Zap, Filter, Mail, Star, Heart, Trash2, Plus, Minus, Info, Package, Utensils } from 'lucide-react';
+import { MapPin, Menu, X, ChevronDown, Leaf, ArrowRight, Sparkles, Send, User, LogIn, ShoppingBag, Phone, MessageCircle, Check, Zap, Filter, Mail, Star, Heart, Trash2, Plus, Minus, Info, Package, Utensils, LogOut } from 'lucide-react';
+// Firebase İçe Aktarımları
+import { initializeApp } from 'firebase/app';
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile, signInWithCustomToken, signInAnonymously } from 'firebase/auth';
+import { getFirestore, doc, setDoc, getDoc, collection } from 'firebase/firestore';
 
 // --- AYARLAR ---
 const LOGO_URL = "/logo.png"; 
 const APP_LINK = "https://gemini.google.com/share/4fc04afd1c2a";
-const apiKey = ""; 
+const apiKey = ""; // API Key
+
+// --- FIREBASE KURULUMU ---
+// Not: Bu kısım sistem tarafından otomatik sağlanan config ile çalışır.
+const firebaseConfig = JSON.parse(__firebase_config);
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 
 // --- RENK PALETİ ---
 const COLORS = {
@@ -38,23 +50,23 @@ const LOCATIONS = [
   { id: 7, name: "Teknopark İst.", status: "active", stock: "Yüksek", distance: "15km" },
 ];
 
-// --- MENÜ (isPopular EKLENDİ) ---
+// --- MENÜ ---
 const FULL_MENU = [
   // BOWLS
   { 
-    id: 101, cat: "Bowl", name: "Ege Rüyası", price: 195, kcal: 420, isPopular: true,
+    id: 101, cat: "Bowl", name: "Ege Rüyası", price: 195, kcal: 420, 
     imgPackaged: "https://images.unsplash.com/photo-1543352634-a1c51d9f1fa7?auto=format&fit=crop&q=80&w=500", 
     imgPlated: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=500", 
     tags: ["Yüksek Protein", "Glutensiz"], desc: "Izgara tavuk, kinoa, nar, ceviz ve yeşillikler.",
-    ingredients: "Marine edilmiş ızgara tavuk göğsü, haşlanmış kinoa, mevsim yeşillikleri, ayıklanmış nar taneleri, yerli ceviz içi.",
+    ingredients: "Marine edilmiş ızgara tavuk göğsü, haşlanmış kinoa, mevsim yeşillikleri, ayıklanmış nar taneleri, yerli ceviz içi, özel nar ekşisi sosu.",
     macros: { protein: "32g", carbs: "45g", fat: "12g" }
   },
   { 
-    id: 102, cat: "Bowl", name: "Somon Poke", price: 240, kcal: 510, isPopular: true,
+    id: 102, cat: "Bowl", name: "Somon Poke", price: 240, kcal: 510, 
     imgPackaged: "https://images.unsplash.com/photo-1603082303693-f39b0403eb72?auto=format&fit=crop&q=80&w=500", 
     imgPlated: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500", 
     tags: ["Omega-3", "Glutensiz"], desc: "Taze somon küpleri, avokado, edamame, salatalık.",
-    ingredients: "Norveç somonu, dilimlenmiş avokado, soya fasulyesi (edamame), salatalık, susam, suşi pirinci.",
+    ingredients: "Norveç somonu, dilimlenmiş avokado, soya fasulyesi (edamame), salatalık, susam, suşi pirinci, soya sosu.",
     macros: { protein: "28g", carbs: "50g", fat: "18g" }
   },
   { 
@@ -70,7 +82,7 @@ const FULL_MENU = [
     imgPackaged: "https://images.unsplash.com/photo-1604496862236-c43328b2d430?auto=format&fit=crop&q=80&w=500", 
     imgPlated: "https://images.unsplash.com/photo-1541518763179-0e34e424fb23?w=500", 
     tags: ["Vegan"], desc: "Çıtır falafel, pancarlı humus, roka, tahin sos.",
-    ingredients: "Ev yapımı falafel topları, pancarlı humus, bebek roka, çeri domates, tahin sos.",
+    ingredients: "Ev yapımı falafel topları, pancarlı humus, bebek roka, çeri domates, tahin sos, sumak.",
     macros: { protein: "15g", carbs: "40g", fat: "14g" }
   },
   { 
@@ -78,13 +90,13 @@ const FULL_MENU = [
     imgPackaged: "https://images.unsplash.com/photo-1582499814723-22442273e626?auto=format&fit=crop&q=80&w=500", 
     imgPlated: "https://images.unsplash.com/photo-1585238342024-78d387f4a707?w=500", 
     tags: ["Acılı", "Vejeteryan"], desc: "Siyah fasulye, mısır, jalapeno, guacamole, salsa.",
-    ingredients: "Meksika fasulyesi, mısır, jalapeno turşusu, guacamole, domates salsa, esmer pirinç.",
+    ingredients: "Meksika fasulyesi, mısır, jalapeno turşusu, guacamole, domates salsa, esmer pirinç, kişniş.",
     macros: { protein: "18g", carbs: "60g", fat: "20g" }
   },
 
   // SALATALAR
   { 
-    id: 201, cat: "Salata", name: "Sezar Klasik", price: 170, kcal: 350, isPopular: true,
+    id: 201, cat: "Salata", name: "Sezar Klasik", price: 170, kcal: 350, 
     imgPackaged: "https://images.unsplash.com/photo-1620917670397-a331343d3c64?auto=format&fit=crop&q=80&w=500", 
     imgPlated: "https://images.unsplash.com/photo-1550304943-4f24f54ddde9?w=500", 
     tags: ["Klasik"], desc: "Roman marulu, parmesan, kruton, sezar sos.",
@@ -126,7 +138,7 @@ const FULL_MENU = [
 
   // WRAPS
   { 
-    id: 301, cat: "Wrap", name: "Hindi Füme", price: 160, kcal: 380, isPopular: true,
+    id: 301, cat: "Wrap", name: "Hindi Füme", price: 160, kcal: 380, 
     imgPackaged: "https://images.unsplash.com/photo-1625937329053-2db3839846c8?auto=format&fit=crop&q=80&w=500", 
     imgPlated: "https://images.unsplash.com/photo-1626700051175-6818013e1d4f?w=500", 
     tags: ["Yüksek Protein"], desc: "Tam buğday lavaş, hindi füme, labne.",
@@ -149,11 +161,11 @@ const FULL_MENU = [
   { id: 401, cat: "Atıştırmalık", name: "Elma & Fıstık Ezmesi", price: 60, kcal: 190, imgPackaged: "https://images.unsplash.com/photo-1584559582128-b8be43b4342b?w=500", imgPlated: "https://images.unsplash.com/photo-1576675784432-994941412b3d?w=500", tags: ["Vegan"], desc: "Yeşil elma dilimleri, şekersiz fıstık ezmesi.", ingredients: "Granny Smith elma, %100 şekersiz fıstık ezmesi.", macros: { protein: "6g", carbs: "20g", fat: "10g" } },
   { id: 402, cat: "Atıştırmalık", name: "Humus & Kraker", price: 70, kcal: 240, imgPackaged: "https://images.unsplash.com/photo-1584559582128-b8be43b4342b?w=500", imgPlated: "https://images.unsplash.com/photo-1577805947697-89e18249d767?w=500", tags: ["Vegan"], desc: "Ev yapımı humus, tam tahıllı kraker.", ingredients: "Nohut, tahin, limon, zeytinyağı, tam buğday kraker.", macros: { protein: "8g", carbs: "30g", fat: "12g" } },
   { id: 403, cat: "Atıştırmalık", name: "Protein Topları", price: 55, kcal: 180, imgPackaged: "https://images.unsplash.com/photo-1584559582128-b8be43b4342b?w=500", imgPlated: "https://images.unsplash.com/photo-1604382354936-07c5d9983bd3?w=500", tags: ["Yüksek Protein"], desc: "Hurma, kakao, fındık topları.", ingredients: "Hurma püresi, kakao, fındık parçaları, whey protein tozu.", macros: { protein: "10g", carbs: "20g", fat: "8g" } },
-  { id: 404, cat: "Atıştırmalık", name: "Chia Puding", price: 90, kcal: 220, isPopular: true, imgPackaged: "https://images.unsplash.com/photo-1579353977828-2a4eab54c8fa?auto=format&fit=crop&q=80&w=500", imgPlated: "https://images.unsplash.com/photo-1584559582128-b8be43b4342b?w=500", tags: ["Tatlı", "Vegan"], desc: "Hindistan cevizi sütü, chia, meyve.", ingredients: "Hindistan cevizi sütü, chia tohumu, agave şurubu, orman meyveleri.", macros: { protein: "6g", carbs: "25g", fat: "12g" } },
+  { id: 404, cat: "Atıştırmalık", name: "Chia Puding", price: 90, kcal: 220, imgPackaged: "https://images.unsplash.com/photo-1579353977828-2a4eab54c8fa?auto=format&fit=crop&q=80&w=500", imgPlated: "https://images.unsplash.com/photo-1584559582128-b8be43b4342b?w=500", tags: ["Tatlı", "Vegan"], desc: "Hindistan cevizi sütü, chia, meyve.", ingredients: "Hindistan cevizi sütü, chia tohumu, agave şurubu, orman meyveleri.", macros: { protein: "6g", carbs: "25g", fat: "12g" } },
   { id: 405, cat: "Atıştırmalık", name: "Çiğ Kuruyemiş", price: 80, kcal: 260, imgPackaged: "https://images.unsplash.com/photo-1584559582128-b8be43b4342b?w=500", imgPlated: "https://images.unsplash.com/photo-1505576391880-b3f9d713dc4f?w=500", tags: ["Vegan"], desc: "Badem, kaju, ceviz karışımı.", ingredients: "Çiğ badem, çiğ kaju, ceviz içi.", macros: { protein: "10g", carbs: "8g", fat: "22g" } },
 
   // İÇECEKLER
-  { id: 501, cat: "İçecek", name: "Green Juice", price: 85, kcal: 110, isPopular: true, imgPackaged: "https://images.unsplash.com/photo-1610970881699-44a5587cabec?w=500", imgPlated: "https://images.unsplash.com/photo-1610970881699-44a5587cabec?w=500", tags: ["Detox"], desc: "Ispanak, elma, limon, zencefil suyu.", ingredients: "Soğuk sıkım ıspanak, yeşil elma, salatalık, limon, zencefil.", macros: { protein: "2g", carbs: "26g", fat: "0g" } },
+  { id: 501, cat: "İçecek", name: "Green Juice", price: 85, kcal: 110, imgPackaged: "https://images.unsplash.com/photo-1610970881699-44a5587cabec?w=500", imgPlated: "https://images.unsplash.com/photo-1610970881699-44a5587cabec?w=500", tags: ["Detox"], desc: "Ispanak, elma, limon, zencefil suyu.", ingredients: "Soğuk sıkım ıspanak, yeşil elma, salatalık, limon, zencefil.", macros: { protein: "2g", carbs: "26g", fat: "0g" } },
   { id: 502, cat: "İçecek", name: "Kombucha", price: 90, kcal: 40, imgPackaged: "https://images.unsplash.com/photo-1622597467961-f052d33a9080?w=500", imgPlated: "https://images.unsplash.com/photo-1622597467961-f052d33a9080?w=500", tags: ["Probiyotik"], desc: "Doğal fermente çay.", ingredients: "Fermante siyah çay, şeker, probiyotik kültür.", macros: { protein: "0g", carbs: "10g", fat: "0g" } },
   { id: 503, cat: "İçecek", name: "Zencefil Shot", price: 55, kcal: 20, imgPackaged: "https://images.unsplash.com/photo-1600271886742-f049cd451bba?w=500", imgPlated: "https://images.unsplash.com/photo-1600271886742-f049cd451bba?w=500", tags: ["Bağışıklık"], desc: "%100 zencefil ve limon suyu.", ingredients: "Taze zencefil suyu, limon suyu, zerdeçal, karabiber.", macros: { protein: "0g", carbs: "5g", fat: "0g" } },
   { id: 504, cat: "İçecek", name: "Cold Brew", price: 80, kcal: 5, imgPackaged: "https://images.unsplash.com/photo-1517701550927-30cf4ba1dba5?w=500", imgPlated: "https://images.unsplash.com/photo-1517701550927-30cf4ba1dba5?w=500", tags: ["Kafein"], desc: "Soğuk demlenmiş kahve.", ingredients: "%100 Arabica kahve çekirdekleri, su.", macros: { protein: "0g", carbs: "1g", fat: "0g" } },
@@ -165,7 +177,7 @@ const FILTERS = ["Yüksek Protein", "Vegan", "Vejeteryan", "Glutensiz", "Diyet"]
 
 // --- BİLEŞENLER ---
 
-// ÜRÜN DETAY MODALI (KOMPAKT & SABİT ALANLI)
+// ÜRÜN DETAY MODALI
 const ProductDetailModal = ({ product, onClose, onAddToCart }) => {
   const [isPlated, setIsPlated] = useState(true);
 
@@ -203,7 +215,7 @@ const ProductDetailModal = ({ product, onClose, onAddToCart }) => {
           </div>
         </div>
 
-        {/* Sağ: Bilgiler */}
+        {/* Sağ: Bilgiler (SCROLL & FIXED FOOTER) */}
         <div className="w-full md:w-1/2 flex flex-col h-full bg-white">
           <div className="flex-1 overflow-y-auto p-6 md:p-8 scrollbar-hide">
             <div className="flex justify-between items-start mb-2">
@@ -238,11 +250,6 @@ const ProductDetailModal = ({ product, onClose, onAddToCart }) => {
                      </div>
                   </div>
                )}
-               
-               <div className="bg-blue-50 p-3 rounded-lg flex items-start gap-2">
-                  <Info size={16} className="text-blue-500 mt-0.5 shrink-0" />
-                  <p className="text-xs text-blue-700">Alerjen uyarısı: Bu ürün eser miktarda kuruyemiş ve süt ürünü içerebilir.</p>
-               </div>
             </div>
           </div>
 
@@ -330,6 +337,37 @@ const CartDrawer = ({ isOpen, onClose, cart, removeFromCart, total }) => {
 // AUTH MODAL
 const AuthModal = ({ type, onClose }) => {
   const isLogin = type === 'login';
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [fullName, setFullName] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleSubmit = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      if (isLogin) {
+        await signInWithEmailAndPassword(auth, email, password);
+      } else {
+        const cred = await createUserWithEmailAndPassword(auth, email, password);
+        await updateProfile(cred.user, { displayName: fullName });
+        // Profil verisini Firestore'a kaydet
+        await setDoc(doc(db, 'artifacts', appId, 'users', cred.user.uid, 'profile'), {
+          fullName,
+          email,
+          createdAt: new Date()
+        });
+      }
+      onClose();
+    } catch (err) {
+      console.error(err);
+      setError(isLogin ? "Giriş yapılamadı. Bilgilerini kontrol et." : "Kayıt olunamadı. Şifre en az 6 karakter olmalı.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
       <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-white rounded-3xl p-8 w-full max-w-md relative shadow-2xl">
@@ -339,9 +377,40 @@ const AuthModal = ({ type, onClose }) => {
           <p className="text-gray-500 text-sm">{isLogin ? "Hesabına giriş yap ve siparişine devam et." : "Tazelik dünyasına adım at, fırsatları kaçırma."}</p>
         </div>
         <div className="space-y-4">
-           <input type="email" placeholder="E-posta Adresi" className="w-full p-3 rounded-xl border border-gray-200 focus:border-[#4F772D] focus:outline-none bg-gray-50" />
-           <input type="password" placeholder="Şifre" className="w-full p-3 rounded-xl border border-gray-200 focus:border-[#4F772D] focus:outline-none bg-gray-50" />
-           <button className="w-full bg-[#4F772D] text-white py-3 rounded-xl font-bold hover:bg-[#3E6024] transition-colors">{isLogin ? "Giriş Yap" : "Üye Ol"}</button>
+           {!isLogin && (
+             <input 
+               type="text" 
+               placeholder="Adın Soyadın" 
+               className="w-full p-3 rounded-xl border border-gray-200 focus:border-[#4F772D] focus:outline-none bg-gray-50" 
+               value={fullName}
+               onChange={e => setFullName(e.target.value)}
+             />
+           )}
+           <input 
+             type="email" 
+             placeholder="E-posta Adresi" 
+             className="w-full p-3 rounded-xl border border-gray-200 focus:border-[#4F772D] focus:outline-none bg-gray-50" 
+             value={email}
+             onChange={e => setEmail(e.target.value)}
+           />
+           <input 
+             type="password" 
+             placeholder="Şifre" 
+             className="w-full p-3 rounded-xl border border-gray-200 focus:border-[#4F772D] focus:outline-none bg-gray-50" 
+             value={password}
+             onChange={e => setPassword(e.target.value)}
+           />
+           
+           {error && <div className="text-red-500 text-sm text-center">{error}</div>}
+
+           <button 
+             onClick={handleSubmit}
+             disabled={loading}
+             className="w-full bg-[#4F772D] text-white py-3 rounded-xl font-bold hover:bg-[#3E6024] transition-colors disabled:opacity-50"
+           >
+             {loading ? "İşlem yapılıyor..." : (isLogin ? "Giriş Yap" : "Üye Ol")}
+           </button>
+           
            <div className="text-center text-xs text-gray-400 mt-4">veya</div>
            <button className="w-full border border-gray-200 text-gray-600 py-3 rounded-xl font-bold hover:bg-gray-50 transition-colors flex items-center justify-center gap-2">
              <img src="https://www.svgrepo.com/show/475656/google-color.svg" className="w-5 h-5" alt="Google" /> Google ile Devam Et
@@ -399,7 +468,7 @@ const AIChatWidget = () => {
 };
 
 // 2. NAVBAR
-const Navbar = ({ onAuthOpen, cartCount, onCartClick }) => {
+const Navbar = ({ onAuthOpen, cartCount, onCartClick, user, onLogout }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [animateCart, setAnimateCart] = useState(false);
 
@@ -426,8 +495,21 @@ const Navbar = ({ onAuthOpen, cartCount, onCartClick }) => {
           </div>
         </div>
         <div className="hidden md:flex items-center gap-4">
-          <button onClick={() => onAuthOpen('login')} className="flex items-center gap-2 text-gray-600 hover:text-[#4F772D] font-medium text-sm px-3 py-2"><LogIn size={18} /> Giriş</button>
-          <button onClick={() => onAuthOpen('register')} className="flex items-center gap-2 text-white px-5 py-2.5 rounded-full font-bold text-sm hover:bg-[#3E6024] transition-all bg-[#4F772D]"><User size={18} /> Kayıt Ol</button>
+          {user ? (
+            <div className="flex items-center gap-4">
+              <div className="text-sm font-bold text-[#4F772D] flex items-center gap-2">
+                <User size={18} /> {user.displayName || user.email.split('@')[0]}
+              </div>
+              <button onClick={onLogout} className="text-gray-500 hover:text-red-500" title="Çıkış Yap">
+                <LogOut size={18} />
+              </button>
+            </div>
+          ) : (
+            <>
+              <button onClick={() => onAuthOpen('login')} className="flex items-center gap-2 text-gray-600 hover:text-[#4F772D] font-medium text-sm px-3 py-2"><LogIn size={18} /> Giriş</button>
+              <button onClick={() => onAuthOpen('register')} className="flex items-center gap-2 text-white px-5 py-2.5 rounded-full font-bold text-sm hover:bg-[#3E6024] transition-all bg-[#4F772D]"><User size={18} /> Kayıt Ol</button>
+            </>
+          )}
           
           <motion.button 
              onClick={onCartClick}
@@ -445,7 +527,7 @@ const Navbar = ({ onAuthOpen, cartCount, onCartClick }) => {
         <button className="md:hidden" onClick={() => setIsOpen(!isOpen)}>{isOpen ? <X /> : <Menu />}</button>
       </div>
 
-      {/* Mobil Menü (Düzeltilmiş - Absolute & Full Width) */}
+      {/* Mobil Menü */}
       <AnimatePresence>
         {isOpen && (
           <motion.div 
@@ -457,8 +539,14 @@ const Navbar = ({ onAuthOpen, cartCount, onCartClick }) => {
               <a href="#app-section" onClick={() => setIsOpen(false)} className="hover:text-[#4F772D]">Uygulama</a>
               <a href="#beebul" onClick={() => setIsOpen(false)} className="hover:text-[#4F772D]">BeeBul</a>
               <hr />
-              <button onClick={() => { setIsOpen(false); onAuthOpen('login'); }} className="flex items-center gap-2 text-left hover:text-[#4F772D]"><LogIn size={16}/> Giriş Yap</button>
-              <button onClick={() => { setIsOpen(false); onAuthOpen('register'); }} className="flex items-center gap-2 text-left text-[#4F772D] font-bold"><User size={16}/> Kayıt Ol</button>
+              {user ? (
+                <button onClick={() => { setIsOpen(false); onLogout(); }} className="flex items-center gap-2 text-left text-red-500"><LogOut size={16}/> Çıkış Yap</button>
+              ) : (
+                <>
+                  <button onClick={() => { setIsOpen(false); onAuthOpen('login'); }} className="flex items-center gap-2 text-left hover:text-[#4F772D]"><LogIn size={16}/> Giriş Yap</button>
+                  <button onClick={() => { setIsOpen(false); onAuthOpen('register'); }} className="flex items-center gap-2 text-left text-[#4F772D] font-bold"><User size={16}/> Kayıt Ol</button>
+                </>
+              )}
             </div>
           </motion.div>
         )}
@@ -478,7 +566,7 @@ const Hero = () => (
         <p className="text-xl text-gray-100 mb-8 max-w-lg">Sıra beklemeden, 7/24 ulaşabileceğin şef imzalı sağlıklı kaseler.</p>
         <div className="flex gap-4">
            <a href="#menu" className="bg-[#4F772D] hover:bg-[#3E6024] text-white px-8 py-4 rounded-full font-bold inline-flex items-center gap-2 transition-all hover:scale-105">Hemen Keşfet <ArrowRight size={20} /></a>
-           <a href="#app-section" className="bg-white text-[#132A13] px-8 py-4 rounded-full font-bold inline-flex items-center gap-2 transition-all hover:bg-gray-100">Uygulamayı İndir</a>
+           <a href="#app-section" target="_blank" rel="noopener noreferrer" className="bg-white text-[#132A13] px-8 py-4 rounded-full font-bold inline-flex items-center gap-2 transition-all hover:bg-gray-100">Uygulamayı İndir</a>
         </div>
       </div>
     </div>
@@ -511,7 +599,7 @@ const Locations = ({ onLocationSelect }) => {
   );
 };
 
-// 6. MENÜ (AMBALAJLI VE AÇIK KONSEPTİ)
+// 6. MENÜ
 const MenuSection = ({ selectedLocation, onAddToCart, onProductClick }) => {
   const [activeCat, setActiveCat] = useState("Çok Sevilenler");
   const [activeFilter, setActiveFilter] = useState(null);
@@ -648,6 +736,23 @@ const App = () => {
   const [cart, setCart] = useState([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    // Oturum durumunu dinle
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+    } catch (error) {
+      console.error("Çıkış hatası:", error);
+    }
+  };
 
   const handleLocationSelect = (loc) => { 
     setSelectedLocation(loc); 
@@ -668,7 +773,7 @@ const App = () => {
   return (
     <div className="min-h-screen bg-[#F7F9F4] text-[#132A13]">
       <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Outfit:wght@300;400;600;800&display=swap'); body { font-family: 'DM Sans', sans-serif; } h1, h2, h3, .font-display { font-family: 'Outfit', sans-serif; }`}</style>
-      <Navbar onAuthOpen={setAuthModalType} cartCount={cart.length} onCartClick={() => setIsCartOpen(true)} />
+      <Navbar onAuthOpen={setAuthModalType} cartCount={cart.length} onCartClick={() => setIsCartOpen(true)} user={user} onLogout={handleLogout} />
       <Hero />
       <MenuSection selectedLocation={selectedLocation} onAddToCart={addToCart} onProductClick={setSelectedProduct} />
       <AppSection />
