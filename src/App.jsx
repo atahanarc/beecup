@@ -1,45 +1,47 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MapPin, Menu, X, ChevronDown, Leaf, ArrowRight, Sparkles, Send, User, LogIn, ShoppingBag, Phone, MessageCircle, Check, Zap, Filter, Mail, Star, Heart, Trash2, Plus, Minus, Info, Package, Utensils, LogOut } from 'lucide-react';
+import { MapPin, Menu, X, ChevronDown, Leaf, ArrowRight, Sparkles, Send, User, LogIn, ShoppingBag, Phone, MessageCircle, Check, Zap, Filter, Mail, Star, Heart, Trash2, Plus, Minus, Info, Package, Utensils, LogOut, Eye, EyeOff, Loader2 } from 'lucide-react';
 // Firebase İçe Aktarımları
 import { initializeApp } from 'firebase/app';
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from 'firebase/auth';
-import { getFirestore, doc, setDoc } from 'firebase/firestore';
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile, signInAnonymously } from 'firebase/auth';
+import { getFirestore, doc, setDoc, addDoc, collection } from 'firebase/firestore';
+// EmailJS (Önizleme için yorum satırına alındı. Kendi projende npm install @emailjs/browser yapıp açmalısın.)
+// import emailjs from '@emailjs/browser';
 
 // --- AYARLAR ---
 const LOGO_URL = "/logo.png"; 
 const APP_LINK = "https://gemini.google.com/share/4fc04afd1c2a";
-const apiKey = ""; // Google Gemini API Key (AI Sohbet için)
+const ADMIN_EMAIL = "info@beecupco.com"; 
+const apiKey = ""; 
 
-// --- FIREBASE KURULUMU (ÖNEMLİ!) ---
-// Buradaki bilgileri kendi Firebase konsolundan alıp doldurmalısın.
-// Doldurmazsan Giriş/Kayıt çalışmaz ama site açılır.
-const firebaseConfig = {
-  apiKey: "BURAYA_FIREBASE_API_KEY_GELECEK",
-  authDomain: "beecup-app.firebaseapp.com",
-  projectId: "beecup-app",
-  storageBucket: "beecup-app.appspot.com",
-  messagingSenderId: "SENDER_ID",
-  appId: "APP_ID"
+// --- EMAILJS AYARLARI ---
+const EMAILJS_CONFIG = {
+  SERVICE_ID: "service_fqmhoei",
+  TEMPLATE_ID_WELCOME: "template_welcome",
+  TEMPLATE_ID_FEEDBACK: "template_feedback",
+  PUBLIC_KEY: "public_key_xxxxxx"
 };
 
-// Hata önleyici başlatma
+// --- FIREBASE KURULUMU ---
+const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
 let app, auth, db;
 try {
   app = initializeApp(firebaseConfig);
   auth = getAuth(app);
   db = getFirestore(app);
-} catch (error) {
-  console.warn("Firebase başlatılamadı. Config bilgilerini kontrol edin.");
+} catch (e) {
+  console.warn("Firebase başlatılamadı, demo modunda çalışıyor.");
 }
+
+const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 
 // --- RENK PALETİ ---
 const COLORS = {
-  primary: "#4F772D", // Ana Yeşil
-  secondary: "#90A955", // Açık Yeşil
-  accent: "#ECF39E", // Sarımtırak Yeşil
-  dark: "#132A13", // Koyu Metin
-  light: "#F7F9F4", // Zemin
+  primary: "#4F772D", 
+  secondary: "#90A955", 
+  accent: "#ECF39E", 
+  dark: "#132A13", 
+  light: "#F7F9F4", 
   white: "#FFFFFF",
 };
 
@@ -68,7 +70,7 @@ const LOCATIONS = [
 const FULL_MENU = [
   // BOWLS
   { 
-    id: 101, cat: "Bowl", name: "Ege Rüyası", price: 195, kcal: 420, 
+    id: 101, cat: "Bowl", name: "Ege Rüyası", price: 195, kcal: 420, isPopular: true,
     imgPackaged: "https://images.unsplash.com/photo-1543352634-a1c51d9f1fa7?auto=format&fit=crop&q=80&w=500", 
     imgPlated: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=500", 
     tags: ["Yüksek Protein", "Glutensiz"], desc: "Izgara tavuk, kinoa, nar, ceviz ve yeşillikler.",
@@ -76,7 +78,7 @@ const FULL_MENU = [
     macros: { protein: "32g", carbs: "45g", fat: "12g" }
   },
   { 
-    id: 102, cat: "Bowl", name: "Somon Poke", price: 240, kcal: 510, 
+    id: 102, cat: "Bowl", name: "Somon Poke", price: 240, kcal: 510, isPopular: true,
     imgPackaged: "https://images.unsplash.com/photo-1603082303693-f39b0403eb72?auto=format&fit=crop&q=80&w=500", 
     imgPlated: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500", 
     tags: ["Omega-3", "Glutensiz"], desc: "Taze somon küpleri, avokado, edamame, salatalık.",
@@ -84,7 +86,7 @@ const FULL_MENU = [
     macros: { protein: "28g", carbs: "50g", fat: "18g" }
   },
   { 
-    id: 103, cat: "Bowl", name: "Teriyaki Tavuk", price: 210, kcal: 480, 
+    id: 103, cat: "Bowl", name: "Teriyaki Tavuk", price: 210, kcal: 480, isPopular: false,
     imgPackaged: "https://images.unsplash.com/photo-1585032226651-759b368d7246?auto=format&fit=crop&q=80&w=500", 
     imgPlated: "https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=500", 
     tags: ["Sıcak"], desc: "Teriyaki soslu tavuk, pirinç, brokoli, susam.",
@@ -92,25 +94,25 @@ const FULL_MENU = [
     macros: { protein: "30g", carbs: "55g", fat: "10g" }
   },
   { 
-    id: 104, cat: "Bowl", name: "Falafel Humus", price: 180, kcal: 390, 
+    id: 104, cat: "Bowl", name: "Falafel Humus", price: 180, kcal: 390, isPopular: true,
     imgPackaged: "https://images.unsplash.com/photo-1604496862236-c43328b2d430?auto=format&fit=crop&q=80&w=500", 
     imgPlated: "https://images.unsplash.com/photo-1541518763179-0e34e424fb23?w=500", 
     tags: ["Vegan"], desc: "Çıtır falafel, pancarlı humus, roka, tahin sos.",
-    ingredients: "Ev yapımı falafel topları, pancarlı humus, bebek roka, çeri domates, tahin sos, sumak.",
+    ingredients: "Ev yapımı falafel topları, pancarlı humus, bebek roka, çeri domates, tahin sos.",
     macros: { protein: "15g", carbs: "40g", fat: "14g" }
   },
   { 
-    id: 105, cat: "Bowl", name: "Mexican Fiesta", price: 220, kcal: 550, 
+    id: 105, cat: "Bowl", name: "Mexican Fiesta", price: 220, kcal: 550, isPopular: false,
     imgPackaged: "https://images.unsplash.com/photo-1582499814723-22442273e626?auto=format&fit=crop&q=80&w=500", 
     imgPlated: "https://images.unsplash.com/photo-1585238342024-78d387f4a707?w=500", 
     tags: ["Acılı", "Vejeteryan"], desc: "Siyah fasulye, mısır, jalapeno, guacamole, salsa.",
-    ingredients: "Meksika fasulyesi, mısır, jalapeno turşusu, guacamole, domates salsa, esmer pirinç, kişniş.",
+    ingredients: "Meksika fasulyesi, mısır, jalapeno turşusu, guacamole, domates salsa, esmer pirinç.",
     macros: { protein: "18g", carbs: "60g", fat: "20g" }
   },
 
   // SALATALAR
   { 
-    id: 201, cat: "Salata", name: "Sezar Klasik", price: 170, kcal: 350, 
+    id: 201, cat: "Salata", name: "Sezar Klasik", price: 170, kcal: 350, isPopular: true,
     imgPackaged: "https://images.unsplash.com/photo-1620917670397-a331343d3c64?auto=format&fit=crop&q=80&w=500", 
     imgPlated: "https://images.unsplash.com/photo-1550304943-4f24f54ddde9?w=500", 
     tags: ["Klasik"], desc: "Roman marulu, parmesan, kruton, sezar sos.",
@@ -118,23 +120,7 @@ const FULL_MENU = [
     macros: { protein: "12g", carbs: "25g", fat: "22g" }
   },
   { 
-    id: 202, cat: "Salata", name: "Tulum Peynirli", price: 160, kcal: 280, 
-    imgPackaged: "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&q=80&w=500", 
-    imgPlated: "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=500", 
-    tags: ["Vejeteryan"], desc: "Roka, tulum peyniri, ceviz, nar ekşisi.",
-    ingredients: "Taze roka, İzmir tulum peyniri, ceviz içi, kurutulmuş domates, nar ekşisi sosu.",
-    macros: { protein: "14g", carbs: "10g", fat: "18g" }
-  },
-  { 
-    id: 203, cat: "Salata", name: "Asya Çıtır", price: 185, kcal: 320, 
-    imgPackaged: "https://images.unsplash.com/photo-1606757365690-3423421c933c?auto=format&fit=crop&q=80&w=500", 
-    imgPlated: "https://images.unsplash.com/photo-1625943553852-781c6dd46faa?w=500", 
-    tags: ["Vegan"], desc: "Lahana, havuç, yer fıstığı, zencefilli sos.",
-    ingredients: "Kırmızı ve beyaz lahana, rendelenmiş havuç, kavrulmuş yer fıstığı, edamame.",
-    macros: { protein: "10g", carbs: "20g", fat: "15g" }
-  },
-  { 
-    id: 204, cat: "Salata", name: "Ton Balıklı", price: 195, kcal: 400, 
+    id: 204, cat: "Salata", name: "Ton Balıklı", price: 195, kcal: 400, isPopular: false,
     imgPackaged: "https://images.unsplash.com/photo-1570560258879-af7f8e1447ac?auto=format&fit=crop&q=80&w=500", 
     imgPlated: "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=500", 
     tags: ["Yüksek Protein"], desc: "Ton balığı, yumurta, mısır, dereotu.",
@@ -152,7 +138,7 @@ const FULL_MENU = [
 
   // WRAPS
   { 
-    id: 301, cat: "Wrap", name: "Hindi Füme", price: 160, kcal: 380, 
+    id: 301, cat: "Wrap", name: "Hindi Füme", price: 160, kcal: 380, isPopular: true,
     imgPackaged: "https://images.unsplash.com/photo-1625937329053-2db3839846c8?auto=format&fit=crop&q=80&w=500", 
     imgPlated: "https://images.unsplash.com/photo-1626700051175-6818013e1d4f?w=500", 
     tags: ["Yüksek Protein"], desc: "Tam buğday lavaş, hindi füme, labne.",
@@ -175,11 +161,11 @@ const FULL_MENU = [
   { id: 401, cat: "Atıştırmalık", name: "Elma & Fıstık Ezmesi", price: 60, kcal: 190, imgPackaged: "https://images.unsplash.com/photo-1584559582128-b8be43b4342b?w=500", imgPlated: "https://images.unsplash.com/photo-1576675784432-994941412b3d?w=500", tags: ["Vegan"], desc: "Yeşil elma dilimleri, şekersiz fıstık ezmesi.", ingredients: "Granny Smith elma, %100 şekersiz fıstık ezmesi.", macros: { protein: "6g", carbs: "20g", fat: "10g" } },
   { id: 402, cat: "Atıştırmalık", name: "Humus & Kraker", price: 70, kcal: 240, imgPackaged: "https://images.unsplash.com/photo-1584559582128-b8be43b4342b?w=500", imgPlated: "https://images.unsplash.com/photo-1577805947697-89e18249d767?w=500", tags: ["Vegan"], desc: "Ev yapımı humus, tam tahıllı kraker.", ingredients: "Nohut, tahin, limon, zeytinyağı, tam buğday kraker.", macros: { protein: "8g", carbs: "30g", fat: "12g" } },
   { id: 403, cat: "Atıştırmalık", name: "Protein Topları", price: 55, kcal: 180, imgPackaged: "https://images.unsplash.com/photo-1584559582128-b8be43b4342b?w=500", imgPlated: "https://images.unsplash.com/photo-1604382354936-07c5d9983bd3?w=500", tags: ["Yüksek Protein"], desc: "Hurma, kakao, fındık topları.", ingredients: "Hurma püresi, kakao, fındık parçaları, whey protein tozu.", macros: { protein: "10g", carbs: "20g", fat: "8g" } },
-  { id: 404, cat: "Atıştırmalık", name: "Chia Puding", price: 90, kcal: 220, imgPackaged: "https://images.unsplash.com/photo-1579353977828-2a4eab54c8fa?auto=format&fit=crop&q=80&w=500", imgPlated: "https://images.unsplash.com/photo-1584559582128-b8be43b4342b?w=500", tags: ["Tatlı", "Vegan"], desc: "Hindistan cevizi sütü, chia, meyve.", ingredients: "Hindistan cevizi sütü, chia tohumu, agave şurubu, orman meyveleri.", macros: { protein: "6g", carbs: "25g", fat: "12g" } },
+  { id: 404, cat: "Atıştırmalık", name: "Chia Puding", price: 90, kcal: 220, isPopular: true, imgPackaged: "https://images.unsplash.com/photo-1579353977828-2a4eab54c8fa?auto=format&fit=crop&q=80&w=500", imgPlated: "https://images.unsplash.com/photo-1584559582128-b8be43b4342b?w=500", tags: ["Tatlı", "Vegan"], desc: "Hindistan cevizi sütü, chia, meyve.", ingredients: "Hindistan cevizi sütü, chia tohumu, agave şurubu, orman meyveleri.", macros: { protein: "6g", carbs: "25g", fat: "12g" } },
   { id: 405, cat: "Atıştırmalık", name: "Çiğ Kuruyemiş", price: 80, kcal: 260, imgPackaged: "https://images.unsplash.com/photo-1584559582128-b8be43b4342b?w=500", imgPlated: "https://images.unsplash.com/photo-1505576391880-b3f9d713dc4f?w=500", tags: ["Vegan"], desc: "Badem, kaju, ceviz karışımı.", ingredients: "Çiğ badem, çiğ kaju, ceviz içi.", macros: { protein: "10g", carbs: "8g", fat: "22g" } },
 
   // İÇECEKLER
-  { id: 501, cat: "İçecek", name: "Green Juice", price: 85, kcal: 110, imgPackaged: "https://images.unsplash.com/photo-1610970881699-44a5587cabec?w=500", imgPlated: "https://images.unsplash.com/photo-1610970881699-44a5587cabec?w=500", tags: ["Detox"], desc: "Ispanak, elma, limon, zencefil suyu.", ingredients: "Soğuk sıkım ıspanak, yeşil elma, salatalık, limon, zencefil.", macros: { protein: "2g", carbs: "26g", fat: "0g" } },
+  { id: 501, cat: "İçecek", name: "Green Juice", price: 85, kcal: 110, isPopular: true, imgPackaged: "https://images.unsplash.com/photo-1610970881699-44a5587cabec?w=500", imgPlated: "https://images.unsplash.com/photo-1610970881699-44a5587cabec?w=500", tags: ["Detox"], desc: "Ispanak, elma, limon, zencefil suyu.", ingredients: "Soğuk sıkım ıspanak, yeşil elma, salatalık, limon, zencefil.", macros: { protein: "2g", carbs: "26g", fat: "0g" } },
   { id: 502, cat: "İçecek", name: "Kombucha", price: 90, kcal: 40, imgPackaged: "https://images.unsplash.com/photo-1622597467961-f052d33a9080?w=500", imgPlated: "https://images.unsplash.com/photo-1622597467961-f052d33a9080?w=500", tags: ["Probiyotik"], desc: "Doğal fermente çay.", ingredients: "Fermante siyah çay, şeker, probiyotik kültür.", macros: { protein: "0g", carbs: "10g", fat: "0g" } },
   { id: 503, cat: "İçecek", name: "Zencefil Shot", price: 55, kcal: 20, imgPackaged: "https://images.unsplash.com/photo-1600271886742-f049cd451bba?w=500", imgPlated: "https://images.unsplash.com/photo-1600271886742-f049cd451bba?w=500", tags: ["Bağışıklık"], desc: "%100 zencefil ve limon suyu.", ingredients: "Taze zencefil suyu, limon suyu, zerdeçal, karabiber.", macros: { protein: "0g", carbs: "5g", fat: "0g" } },
   { id: 504, cat: "İçecek", name: "Cold Brew", price: 80, kcal: 5, imgPackaged: "https://images.unsplash.com/photo-1517701550927-30cf4ba1dba5?w=500", imgPlated: "https://images.unsplash.com/photo-1517701550927-30cf4ba1dba5?w=500", tags: ["Kafein"], desc: "Soğuk demlenmiş kahve.", ingredients: "%100 Arabica kahve çekirdekleri, su.", macros: { protein: "0g", carbs: "1g", fat: "0g" } },
@@ -232,12 +218,12 @@ const ProductDetailModal = ({ product, onClose, onAddToCart }) => {
         {/* Sağ: Bilgiler (SCROLL & FIXED FOOTER) */}
         <div className="w-full md:w-1/2 flex flex-col h-full bg-white">
           <div className="flex-1 overflow-y-auto p-6 md:p-8 scrollbar-hide">
-            <div className="flex justify-between items-start mb-2">
+            <div className="flex justify-between items-start mb-2 pr-12">
                <div>
                   <div className="text-[#90A955] font-bold text-xs uppercase tracking-wider mb-1">{product.cat}</div>
                   <h2 className="text-2xl md:text-3xl font-bold text-[#132A13] leading-tight">{product.name}</h2>
                </div>
-               <div className="text-xl md:text-2xl font-bold text-[#4F772D]">{product.price}</div>
+               <div className="text-xl md:text-2xl font-bold text-[#4F772D]">₺{product.price}</div>
             </div>
 
             <div className="flex gap-2 flex-wrap mb-4">
@@ -264,6 +250,11 @@ const ProductDetailModal = ({ product, onClose, onAddToCart }) => {
                      </div>
                   </div>
                )}
+               
+               <div className="bg-blue-50 p-3 rounded-lg flex items-start gap-2">
+                  <Info size={16} className="text-blue-500 mt-0.5 shrink-0" />
+                  <p className="text-xs text-blue-700">Alerjen uyarısı: Bu ürün eser miktarda kuruyemiş ve süt ürünü içerebilir.</p>
+               </div>
             </div>
           </div>
 
@@ -320,7 +311,7 @@ const CartDrawer = ({ isOpen, onClose, cart, removeFromCart, total }) => {
                     <div className="flex-1">
                       <h4 className="font-bold text-[#132A13] text-sm">{item.name}</h4>
                       <p className="text-xs text-gray-500">{item.cat}</p>
-                      <p className="font-bold text-[#4F772D] mt-1 text-sm">{item.price}</p>
+                      <p className="font-bold text-[#4F772D] mt-1 text-sm">₺{item.price}</p>
                     </div>
                     <button onClick={() => removeFromCart(item.cartId)} className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-all">
                       <Trash2 size={16} />
@@ -356,8 +347,20 @@ const AuthModal = ({ type, onClose }) => {
   const [fullName, setFullName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+
+  const sendWelcomeEmail = (userName, userEmail) => {
+    if (!EMAILJS_CONFIG.SERVICE_ID.startsWith('service_')) return;
+    // EmailJS ile gönderme (Aktif)
+    // emailjs.send(...) - Mock implementation for preview, uncomment for real usage
+    console.log(`Mail simülasyonu: ${userEmail} - ${userName}`);
+  };
 
   const handleSubmit = async () => {
+    if (!auth) {
+       setError("Giriş sistemi şu an kullanılamıyor.");
+       return;
+    }
     setLoading(true);
     setError('');
     try {
@@ -366,72 +369,83 @@ const AuthModal = ({ type, onClose }) => {
       } else {
         const cred = await createUserWithEmailAndPassword(auth, email, password);
         await updateProfile(cred.user, { displayName: fullName });
-        // Profil verisini Firestore'a kaydet
-        await setDoc(doc(db, 'artifacts', appId, 'users', cred.user.uid, 'profile'), {
-          fullName,
-          email,
-          createdAt: new Date()
-        });
+        if (db) {
+           await setDoc(doc(db, 'artifacts', appId, 'users', cred.user.uid, 'profile'), { fullName, email, createdAt: new Date() });
+        }
+        sendWelcomeEmail(fullName, email);
       }
       onClose();
     } catch (err) {
-      console.error(err);
-      setError(isLogin ? "Giriş yapılamadı. Bilgilerini kontrol et." : "Kayıt olunamadı. Şifre en az 6 karakter olmalı.");
-    } finally {
-      setLoading(false);
-    }
+      let msg = "Bir hata oluştu.";
+      if (err.code === 'auth/email-already-in-use') msg = "Bu e-posta zaten kullanımda.";
+      else if (err.code === 'auth/weak-password') msg = "Şifre en az 6 karakter olmalı.";
+      else if (err.code === 'auth/invalid-email') msg = "Geçersiz e-posta adresi.";
+      else if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') msg = "E-posta veya şifre hatalı.";
+      setError(msg);
+    } finally { setLoading(false); }
   };
 
   return (
     <div className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
       <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-white rounded-3xl p-8 w-full max-w-md relative shadow-2xl">
         <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"><X size={24} /></button>
-        <div className="text-center mb-6">
-          <h2 className="text-2xl font-bold text-[#132A13] mb-2">{isLogin ? "Tekrar Hoşgeldin!" : "BeeCup'a Katıl"}</h2>
-          <p className="text-gray-500 text-sm">{isLogin ? "Hesabına giriş yap ve siparişine devam et." : "Tazelik dünyasına adım at, fırsatları kaçırma."}</p>
-        </div>
+        <div className="text-center mb-6"><h2 className="text-2xl font-bold text-[#132A13] mb-2">{isLogin ? "Giriş Yap" : "Kayıt Ol"}</h2></div>
         <div className="space-y-4">
-           {!isLogin && (
-             <input 
-               type="text" 
-               placeholder="Adın Soyadın" 
-               className="w-full p-3 rounded-xl border border-gray-200 focus:border-[#4F772D] focus:outline-none bg-gray-50" 
-               value={fullName}
-               onChange={e => setFullName(e.target.value)}
-             />
-           )}
-           <input 
-             type="email" 
-             placeholder="E-posta Adresi" 
-             className="w-full p-3 rounded-xl border border-gray-200 focus:border-[#4F772D] focus:outline-none bg-gray-50" 
-             value={email}
-             onChange={e => setEmail(e.target.value)}
-           />
-           <input 
-             type="password" 
-             placeholder="Şifre" 
-             className="w-full p-3 rounded-xl border border-gray-200 focus:border-[#4F772D] focus:outline-none bg-gray-50" 
-             value={password}
-             onChange={e => setPassword(e.target.value)}
-           />
-           
+           {!isLogin && <input type="text" placeholder="Adın Soyadın" className="w-full p-3 rounded-xl border border-gray-200 focus:outline-none" value={fullName} onChange={e => setFullName(e.target.value)} />}
+           <input type="email" placeholder="E-posta" className="w-full p-3 rounded-xl border border-gray-200 focus:outline-none" value={email} onChange={e => setEmail(e.target.value)} />
+           <div className="relative"><input type={showPassword ? "text" : "password"} placeholder="Şifre" className="w-full p-3 rounded-xl border border-gray-200 focus:outline-none pr-10" value={password} onChange={e => setPassword(e.target.value)} /><button onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-3 text-gray-400"><Eye size={20} /></button></div>
            {error && <div className="text-red-500 text-sm text-center">{error}</div>}
-
-           <button 
-             onClick={handleSubmit}
-             disabled={loading}
-             className="w-full bg-[#4F772D] text-white py-3 rounded-xl font-bold hover:bg-[#3E6024] transition-colors disabled:opacity-50"
-           >
-             {loading ? "İşlem yapılıyor..." : (isLogin ? "Giriş Yap" : "Üye Ol")}
-           </button>
-           
-           <div className="text-center text-xs text-gray-400 mt-4">veya</div>
-           <button className="w-full border border-gray-200 text-gray-600 py-3 rounded-xl font-bold hover:bg-gray-50 transition-colors flex items-center justify-center gap-2">
-             <img src="https://www.svgrepo.com/show/475656/google-color.svg" className="w-5 h-5" alt="Google" /> Google ile Devam Et
-           </button>
+           <button onClick={handleSubmit} disabled={loading} className="w-full bg-[#4F772D] text-white py-3 rounded-xl font-bold hover:bg-[#3E6024] transition-colors disabled:opacity-50">{loading ? "İşlem yapılıyor..." : (isLogin ? "Giriş Yap" : "Üye Ol")}</button>
         </div>
       </motion.div>
     </div>
+  );
+};
+
+// GÖRÜŞ BİLDİR
+const FeedbackSection = () => {
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [msg, setMsg] = useState('');
+  const [status, setStatus] = useState(null);
+
+  const handleSubmit = async () => {
+    if(!name || !email || !msg) return;
+    setStatus('loading');
+    try {
+        if (db) {
+          await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'feedback'), {
+              name, email, message: msg, createdAt: new Date()
+          });
+          setStatus('success');
+          setTimeout(() => setStatus(null), 3000);
+          setName(''); setEmail(''); setMsg('');
+        } else {
+           setStatus('success'); 
+           setTimeout(() => setStatus(null), 3000);
+        }
+    } catch (e) {
+        setStatus('error');
+    }
+  };
+
+  return (
+    <section id="feedback" className="bg-[#132A13] py-16 text-white border-b border-gray-800">
+      <div className="max-w-4xl mx-auto px-6 text-center">
+        <h2 className="text-3xl font-bold mb-4">Görüşlerin Bizim İçin Değerli</h2>
+        <p className="text-gray-400 mb-8">Deneyimlerini paylaş, BeeCup'ı birlikte geliştirelim.</p>
+        <div className="bg-white/5 p-8 rounded-3xl backdrop-blur-sm border border-white/10">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+             <input value={name} onChange={e=>setName(e.target.value)} type="text" placeholder="Adın" className="bg-black/20 border border-gray-700 rounded-xl p-3 text-white placeholder-gray-500 focus:border-[#4F772D] outline-none" />
+             <input value={email} onChange={e=>setEmail(e.target.value)} type="email" placeholder="E-posta Adresin" className="bg-black/20 border border-gray-700 rounded-xl p-3 text-white placeholder-gray-500 focus:border-[#4F772D] outline-none" />
+          </div>
+          <textarea value={msg} onChange={e=>setMsg(e.target.value)} placeholder="Öneri veya şikayetin..." rows="4" className="w-full bg-black/20 border border-gray-700 rounded-xl p-3 text-white placeholder-gray-500 focus:border-[#4F772D] outline-none mb-4"></textarea>
+          <button onClick={handleSubmit} disabled={status === 'loading' || status === 'success'} className="bg-[#4F772D] text-white px-8 py-3 rounded-xl font-bold hover:bg-[#3E6024] transition-colors w-full md:w-auto flex items-center justify-center gap-2">
+            {status === 'loading' ? <Loader2 className="animate-spin" /> : status === 'success' ? "Gönderildi!" : "Gönder"}
+          </button>
+        </div>
+      </div>
+    </section>
   );
 };
 
@@ -512,7 +526,7 @@ const Navbar = ({ onAuthOpen, cartCount, onCartClick, user, onLogout }) => {
           {user ? (
             <div className="flex items-center gap-4">
               <div className="text-sm font-bold text-[#4F772D] flex items-center gap-2">
-                <User size={18} /> {user.displayName || user.email.split('@')[0]}
+                <User size={18} /> {user.isAnonymous ? 'Misafir' : (user.displayName || user.email.split('@')[0])}
               </div>
               <button onClick={onLogout} className="text-gray-500 hover:text-red-500" title="Çıkış Yap">
                 <LogOut size={18} />
@@ -576,11 +590,11 @@ const Hero = () => (
     <div className="relative z-10 max-w-7xl mx-auto px-6 w-full text-white">
       <div className="max-w-2xl">
         <div className="inline-flex items-center gap-2 bg-[#4F772D] px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest mb-6"><Leaf size={14} /> İstanbul'un En Taze Ağı</div>
-        <h1 className="text-5xl md:text-7xl font-bold leading-tight mb-6 font-display">Doğal Ye,<br/><span className="text-[#ECF39E]">Hızlı Yaşa.</span></h1>
+        <h1 className="text-5xl md:text-7xl font-bold leading-tight mb-6 font-display">Doğal Lezzet,<br/><span className="text-[#ECF39E]">Anında Seninle.</span></h1>
         <p className="text-xl text-gray-100 mb-8 max-w-lg">Sıra beklemeden, 7/24 ulaşabileceğin şef imzalı sağlıklı kaseler.</p>
         <div className="flex gap-4">
            <a href="#menu" className="bg-[#4F772D] hover:bg-[#3E6024] text-white px-8 py-4 rounded-full font-bold inline-flex items-center gap-2 transition-all hover:scale-105">Hemen Keşfet <ArrowRight size={20} /></a>
-           <a href="#app-section" target="_blank" rel="noopener noreferrer" className="bg-white text-[#132A13] px-8 py-4 rounded-full font-bold inline-flex items-center gap-2 transition-all hover:bg-gray-100">Uygulamayı İndir</a>
+           <a href={APP_LINK} target="_blank" rel="noopener noreferrer" className="bg-white text-[#132A13] px-8 py-4 rounded-full font-bold inline-flex items-center gap-2 transition-all hover:bg-gray-100">Uygulamayı İndir</a>
         </div>
       </div>
     </div>
@@ -634,8 +648,8 @@ const MenuSection = ({ selectedLocation, onAddToCart, onProductClick }) => {
         <div className="flex flex-col gap-6 mb-10">
            <div className="flex flex-wrap gap-2">{["Çok Sevilenler", "Bowl", "Salata", "Wrap", "Atıştırmalık", "İçecek"].map(cat => (<button key={cat} onClick={() => setActiveCat(cat)} className={`px-5 py-2 rounded-full text-sm font-bold transition-all border ${activeCat === cat ? 'bg-[#4F772D] text-white border-[#4F772D]' : 'bg-white text-gray-600 border-gray-200 hover:border-[#4F772D]'}`}>{cat}</button>))}</div>
            <div className="flex items-center gap-3 p-4 bg-white rounded-xl border border-gray-200 shadow-sm">
-              <div className="flex items-center gap-2 text-sm text-gray-500 font-bold border-r pr-4 mr-2"><Filter size={16} /> Özellikler:</div>
-              <div className="flex flex-wrap gap-2">{["Yüksek Protein", "Vegan", "Vejeteryan", "Glutensiz", "Diyet"].map(f => (<button key={f} onClick={() => setActiveFilter(activeFilter === f ? null : f)} className={`text-xs font-bold px-3 py-1.5 rounded-md border transition-colors flex items-center gap-1 ${activeFilter === f ? 'bg-[#ECF39E] text-[#4F772D] border-[#4F772D]' : 'bg-transparent text-gray-500 border-gray-300 hover:border-[#4F772D]'}`}>{activeFilter === f && <Check size={12} />} {f}</button>))}</div>
+              <div className="flex items-center gap-2 text-sm text-gray-500 font-bold border-r pr-4 mr-2"><Filter size={16} /> Beslenme Tercihi:</div>
+              <div className="flex flex-wrap gap-2">{["Yüksek Protein", "Vegan", "Vejeteryan", "Glutensiz", "Diyet"].map(f => (<button key={f} onClick={() => setActiveFilter(activeFilter === f ? null : f)} className={`text-xs font-bold px-3 py-1.5 rounded-full border transition-colors flex items-center gap-1 ${activeFilter === f ? 'bg-[#ECF39E] text-[#4F772D] border-[#4F772D]' : 'bg-transparent text-gray-500 border-gray-300 hover:border-[#4F772D]'}`}>{activeFilter === f && <Check size={12} />} {f}</button>))}</div>
            </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -681,26 +695,6 @@ const MenuSection = ({ selectedLocation, onAddToCart, onProductClick }) => {
   );
 };
 
-// 6. GÖRÜŞ VE ÖNERİLER
-const FeedbackSection = () => {
-  return (
-    <section id="feedback" className="bg-[#132A13] py-16 text-white border-b border-gray-800">
-      <div className="max-w-4xl mx-auto px-6 text-center">
-        <h2 className="text-3xl font-bold mb-4">Görüşlerin Bizim İçin Değerli</h2>
-        <p className="text-gray-400 mb-8">Deneyimlerini paylaş, BeeCup'ı birlikte geliştirelim.</p>
-        <div className="bg-white/5 p-8 rounded-3xl backdrop-blur-sm border border-white/10">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-             <input type="text" placeholder="Adın" className="bg-black/20 border border-gray-700 rounded-xl p-3 text-white placeholder-gray-500 focus:border-[#4F772D] outline-none" />
-             <input type="email" placeholder="E-posta Adresin" className="bg-black/20 border border-gray-700 rounded-xl p-3 text-white placeholder-gray-500 focus:border-[#4F772D] outline-none" />
-          </div>
-          <textarea placeholder="Öneri veya şikayetin..." rows="4" className="w-full bg-black/20 border border-gray-700 rounded-xl p-3 text-white placeholder-gray-500 focus:border-[#4F772D] outline-none mb-4"></textarea>
-          <button className="bg-[#4F772D] text-white px-8 py-3 rounded-xl font-bold hover:bg-[#3E6024] transition-colors w-full md:w-auto">Gönder</button>
-        </div>
-      </div>
-    </section>
-  );
-};
-
 // 7. UYGULAMA BÖLÜMÜ (SON SIRA)
 const AppSection = () => (
   <section id="app-section" className="py-20 bg-[#F0F5ED] overflow-hidden">
@@ -736,7 +730,7 @@ const Footer = () => (
         <div className="flex items-center gap-2 mb-6"><img src={LOGO_URL} alt="BeeCup" className="h-8 w-auto bg-white rounded p-0.5" onError={(e)=>{e.target.style.display='none'}}/><span className="font-bold text-2xl">BeeCup.</span></div>
         <p className="text-gray-400 text-sm leading-relaxed max-w-sm">Doğal, sürdürülebilir ve teknolojik beslenme deneyimi.</p>
       </div>
-      <div><h4 className="font-bold mb-6 text-[#90A955]">İletişim</h4><ul className="space-y-3 text-sm text-gray-400"><li className="flex items-center gap-2"><MapPin size={16}/> Levent, İstanbul</li><li className="flex items-center gap-2"><Phone size={16}/> 0850 123 45 67</li><li className="flex items-center gap-2"><Mail size={16}/> info@beecup.com</li></ul></div>
+      <div><h4 className="font-bold mb-6 text-[#90A955]">İletişim</h4><ul className="space-y-3 text-sm text-gray-400"><li className="flex items-center gap-2"><MapPin size={16}/> Galatasaray Üniversitesi, Ortaköy</li><li className="flex items-center gap-2"><Phone size={16}/> 0850 123 45 67</li><li className="flex items-center gap-2"><Mail size={16}/> info@beecupco.com</li></ul></div>
       <div><h4 className="font-bold mb-6 text-[#90A955]">Uygulama</h4><a href={APP_LINK} target="_blank" rel="noopener noreferrer" className="block text-gray-400 hover:text-white mb-2">iOS App İndir</a><a href={APP_LINK} target="_blank" rel="noopener noreferrer" className="block text-gray-400 hover:text-white">Android App İndir</a></div>
     </div>
     <div className="max-w-7xl mx-auto px-6 mt-12 pt-8 border-t border-gray-800 text-center text-xs text-gray-500">© 2025 BeeCup Inc.</div>
@@ -753,19 +747,28 @@ const App = () => {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    // Oturum durumunu dinle
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-    });
-    return () => unsubscribe();
+    // 1. Başlığı (Title) Güncelle
+    document.title = "BeeCup | Şehrin En Taze Molası";
+    // 2. Favicon'u (Sekme İkonu) Güncelle
+    let link = document.querySelector("link[rel~='icon']");
+    if (!link) {
+      link = document.createElement('link');
+      link.rel = 'icon';
+      document.getElementsByTagName('head')[0].appendChild(link);
+    }
+    link.href = LOGO_URL;
+
+    // 3. Oturum Durumunu Dinle
+    if (auth) {
+      const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+        setUser(currentUser);
+      });
+      return () => unsubscribe();
+    }
   }, []);
 
   const handleLogout = async () => {
-    try {
-      await signOut(auth);
-    } catch (error) {
-      console.error("Çıkış hatası:", error);
-    }
+    try { await signOut(auth); } catch (error) { console.error("Çıkış hatası:", error); }
   };
 
   const handleLocationSelect = (loc) => { 
@@ -786,7 +789,7 @@ const App = () => {
 
   return (
     <div className="min-h-screen bg-[#F7F9F4] text-[#132A13]">
-      <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Outfit:wght@300;400;600;800&display=swap'); body { font-family: 'DM Sans', sans-serif; } h1, h2, h3, .font-display { font-family: 'Outfit', sans-serif; }`}</style>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Outfit:wght@300;400;600;800&display=swap'); body { font-family: 'DM Sans', sans-serif; } h1, h2, h3, .font-display { font-family: 'Outfit', sans-serif; } .scrollbar-hide::-webkit-scrollbar { display: none; } .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }`}</style>
       <Navbar onAuthOpen={setAuthModalType} cartCount={cart.length} onCartClick={() => setIsCartOpen(true)} user={user} onLogout={handleLogout} />
       <Hero />
       <MenuSection selectedLocation={selectedLocation} onAddToCart={addToCart} onProductClick={setSelectedProduct} />
