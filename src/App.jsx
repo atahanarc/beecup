@@ -17,10 +17,10 @@ const ADMIN_EMAIL = "info@beecupco.com";
 const apiKey = "AIzaSyAx9MQ8BZd3nzp9yTddorJ5w2ttYYlOSIw";
 
 // --- EMAILJS AYARLARI ---
-// Not: Service ID'niz "service_fqmhoei" ise burası doğrudur. 
+// Not: Service ID'niz "EMAILJS_CONFIG" ise burası doğrudur. 
 // Farklıysa EmailJS panelinden kontrol edip burayı güncelleyin.
 const EMAILJS_CONFIG = {
-  SERVICE_ID: "service_fqmhoei", 
+  SERVICE_ID: "service_ggxh0x9", 
   TEMPLATE_ID_WELCOME: "template_7fj3mce", 
   TEMPLATE_ID_FEEDBACK: "template_7fj3mce",
   PUBLIC_KEY: "_m2hMVBLwxednDRNg"
