@@ -3,21 +3,35 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { MapPin, Menu, X, ChevronDown, Leaf, ArrowRight, Sparkles, Send, User, LogIn, ShoppingBag, Phone, MessageCircle, Check, Zap, Filter, Mail, Star, Heart, Trash2, Plus, Minus, Info, Package, Utensils, LogOut } from 'lucide-react';
 // Firebase İçe Aktarımları
 import { initializeApp } from 'firebase/app';
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile, signInWithCustomToken, signInAnonymously } from 'firebase/auth';
-import { getFirestore, doc, setDoc, getDoc, collection } from 'firebase/firestore';
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile } from 'firebase/auth';
+import { getFirestore, doc, setDoc } from 'firebase/firestore';
 
 // --- AYARLAR ---
 const LOGO_URL = "/logo.png"; 
 const APP_LINK = "https://gemini.google.com/share/4fc04afd1c2a";
-const apiKey = ""; // API Key
+const apiKey = ""; // Google Gemini API Key (AI Sohbet için)
 
-// --- FIREBASE KURULUMU ---
-// Not: Bu kısım sistem tarafından otomatik sağlanan config ile çalışır.
-const firebaseConfig = JSON.parse(__firebase_config);
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+// --- FIREBASE KURULUMU (ÖNEMLİ!) ---
+// Buradaki bilgileri kendi Firebase konsolundan alıp doldurmalısın.
+// Doldurmazsan Giriş/Kayıt çalışmaz ama site açılır.
+const firebaseConfig = {
+  apiKey: "BURAYA_FIREBASE_API_KEY_GELECEK",
+  authDomain: "beecup-app.firebaseapp.com",
+  projectId: "beecup-app",
+  storageBucket: "beecup-app.appspot.com",
+  messagingSenderId: "SENDER_ID",
+  appId: "APP_ID"
+};
+
+// Hata önleyici başlatma
+let app, auth, db;
+try {
+  app = initializeApp(firebaseConfig);
+  auth = getAuth(app);
+  db = getFirestore(app);
+} catch (error) {
+  console.warn("Firebase başlatılamadı. Config bilgilerini kontrol edin.");
+}
 
 // --- RENK PALETİ ---
 const COLORS = {
@@ -599,7 +613,7 @@ const Locations = ({ onLocationSelect }) => {
   );
 };
 
-// 6. MENÜ
+// 6. MENÜ (AMBALAJLI VE AÇIK KONSEPTİ)
 const MenuSection = ({ selectedLocation, onAddToCart, onProductClick }) => {
   const [activeCat, setActiveCat] = useState("Çok Sevilenler");
   const [activeFilter, setActiveFilter] = useState(null);
