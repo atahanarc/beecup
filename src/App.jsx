@@ -5,43 +5,61 @@ import { MapPin, Menu, X, ChevronDown, Leaf, ArrowRight, Sparkles, Send, User, L
 import { initializeApp } from 'firebase/app';
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile, signInAnonymously } from 'firebase/auth';
 import { getFirestore, doc, setDoc, addDoc, collection } from 'firebase/firestore';
-// EmailJS (Önizleme için yorum satırına alındı. Kendi projende npm install @emailjs/browser yapıp açmalısın.)
-// import emailjs from '@emailjs/browser';
+// EmailJS İçe Aktarımı
+import emailjs from '@emailjs/browser';
 
 // --- AYARLAR ---
 const LOGO_URL = "/logo.png"; 
 const APP_LINK = "https://gemini.google.com/share/4fc04afd1c2a";
 const ADMIN_EMAIL = "info@beecupco.com"; 
-const apiKey = ""; 
+const apiKey = ""; // Gemini API Key (Varsa buraya yazın)
 
-// --- EMAILJS AYARLARI ---
+// --- EMAILJS AYARLARI (GÜNCELLENDİ) ---
 const EMAILJS_CONFIG = {
   SERVICE_ID: "service_fqmhoei",
-  TEMPLATE_ID_WELCOME: "template_welcome",
-  TEMPLATE_ID_FEEDBACK: "template_feedback",
-  PUBLIC_KEY: "public_key_xxxxxx"
+  TEMPLATE_ID_WELCOME: "template_7fj3mce", 
+  TEMPLATE_ID_FEEDBACK: "template_g29anfl",
+  PUBLIC_KEY: "_vis36NdbTyPyYth88Td4" // Senin verdiğin yeni key
 };
 
 // --- FIREBASE KURULUMU ---
-const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+// DİKKAT: Kendi Firebase Config bilgilerini buraya yapıştırmalısın.
+// Eğer yapıştırmazsan giriş/kayıt çalışmaz ama site açılır.
+const firebaseConfig = {
+  apiKey: "BURAYA_FIREBASE_API_KEY",
+  authDomain: "proje-id.firebaseapp.com",
+  projectId: "proje-id",
+  storageBucket: "proje-id.appspot.com",
+  messagingSenderId: "SENDER_ID",
+  appId: "APP_ID"
+};
+
+// Güvenli başlatma
 let app, auth, db;
 try {
-  app = initializeApp(firebaseConfig);
-  auth = getAuth(app);
-  db = getFirestore(app);
+  // Eğer __firebase_config tanımlıysa (Vercel ortamı) onu kullan, yoksa yukarıdaki manuel configi kullan
+  const configToUse = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : firebaseConfig;
+  
+  if (configToUse.apiKey && configToUse.apiKey !== "BURAYA_FIREBASE_API_KEY") {
+      app = initializeApp(configToUse);
+      auth = getAuth(app);
+      db = getFirestore(app);
+  } else {
+      console.warn("Firebase ayarları yapılmadı. Giriş/Kayıt demo modunda.");
+  }
 } catch (e) {
-  console.warn("Firebase başlatılamadı, demo modunda çalışıyor.");
+  console.warn("Firebase başlatılamadı:", e);
 }
 
 const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 
 // --- RENK PALETİ ---
 const COLORS = {
-  primary: "#4F772D", 
-  secondary: "#90A955", 
-  accent: "#ECF39E", 
-  dark: "#132A13", 
-  light: "#F7F9F4", 
+  primary: "#4F772D", // Ana Yeşil
+  secondary: "#90A955", // Açık Yeşil
+  accent: "#ECF39E", // Sarımtırak Yeşil
+  dark: "#132A13", // Koyu Metin
+  light: "#F7F9F4", // Zemin
   white: "#FFFFFF",
 };
 
@@ -118,6 +136,22 @@ const FULL_MENU = [
     tags: ["Klasik"], desc: "Roman marulu, parmesan, kruton, sezar sos.",
     ingredients: "Taze roman marulu, parmesan peyniri rendesi, fırınlanmış kruton ekmekler, özel sezar sos.",
     macros: { protein: "12g", carbs: "25g", fat: "22g" }
+  },
+  { 
+    id: 202, cat: "Salata", name: "Tulum Peynirli", price: 160, kcal: 280, 
+    imgPackaged: "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&q=80&w=500", 
+    imgPlated: "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=500", 
+    tags: ["Vejeteryan"], desc: "Roka, tulum peyniri, ceviz, nar ekşisi.",
+    ingredients: "Taze roka, İzmir tulum peyniri, ceviz içi, kurutulmuş domates, nar ekşisi sosu.",
+    macros: { protein: "14g", carbs: "10g", fat: "18g" }
+  },
+  { 
+    id: 203, cat: "Salata", name: "Asya Çıtır", price: 185, kcal: 320, 
+    imgPackaged: "https://images.unsplash.com/photo-1606757365690-3423421c933c?auto=format&fit=crop&q=80&w=500", 
+    imgPlated: "https://images.unsplash.com/photo-1625943553852-781c6dd46faa?w=500", 
+    tags: ["Vegan"], desc: "Lahana, havuç, yer fıstığı, zencefilli sos.",
+    ingredients: "Kırmızı ve beyaz lahana, rendelenmiş havuç, kavrulmuş yer fıstığı, edamame.",
+    macros: { protein: "10g", carbs: "20g", fat: "15g" }
   },
   { 
     id: 204, cat: "Salata", name: "Ton Balıklı", price: 195, kcal: 400, isPopular: false,
@@ -250,11 +284,6 @@ const ProductDetailModal = ({ product, onClose, onAddToCart }) => {
                      </div>
                   </div>
                )}
-               
-               <div className="bg-blue-50 p-3 rounded-lg flex items-start gap-2">
-                  <Info size={16} className="text-blue-500 mt-0.5 shrink-0" />
-                  <p className="text-xs text-blue-700">Alerjen uyarısı: Bu ürün eser miktarda kuruyemiş ve süt ürünü içerebilir.</p>
-               </div>
             </div>
           </div>
 
@@ -352,8 +381,15 @@ const AuthModal = ({ type, onClose }) => {
   const sendWelcomeEmail = (userName, userEmail) => {
     if (!EMAILJS_CONFIG.SERVICE_ID.startsWith('service_')) return;
     // EmailJS ile gönderme (Aktif)
-    // emailjs.send(...) - Mock implementation for preview, uncomment for real usage
-    console.log(`Mail simülasyonu: ${userEmail} - ${userName}`);
+    emailjs.send(
+      EMAILJS_CONFIG.SERVICE_ID,
+      EMAILJS_CONFIG.TEMPLATE_ID_WELCOME,
+      { to_name: userName, to_email: userEmail },
+      EMAILJS_CONFIG.PUBLIC_KEY
+    ).then(
+      () => console.log("Hoşgeldin maili gönderildi."),
+      (err) => console.error("Mail hatası:", err)
+    );
   };
 
   const handleSubmit = async () => {
@@ -372,6 +408,7 @@ const AuthModal = ({ type, onClose }) => {
         if (db) {
            await setDoc(doc(db, 'artifacts', appId, 'users', cred.user.uid, 'profile'), { fullName, email, createdAt: new Date() });
         }
+        // Kayıt başarılıysa mail gönder
         sendWelcomeEmail(fullName, email);
       }
       onClose();
@@ -409,6 +446,20 @@ const FeedbackSection = () => {
   const [msg, setMsg] = useState('');
   const [status, setStatus] = useState(null);
 
+  const sendFeedbackEmail = () => {
+    if (!EMAILJS_CONFIG.SERVICE_ID.startsWith('service_')) return;
+    
+    emailjs.send(
+      EMAILJS_CONFIG.SERVICE_ID,
+      EMAILJS_CONFIG.TEMPLATE_ID_FEEDBACK,
+      { from_name: name, from_email: email, message: msg, to_email: ADMIN_EMAIL },
+      EMAILJS_CONFIG.PUBLIC_KEY
+    ).then(
+      () => console.log("Görüş maili iletildi."),
+      (err) => console.error("Mail hatası:", err)
+    );
+  };
+
   const handleSubmit = async () => {
     if(!name || !email || !msg) return;
     setStatus('loading');
@@ -417,6 +468,10 @@ const FeedbackSection = () => {
           await addDoc(collection(db, 'artifacts', appId, 'public', 'data', 'feedback'), {
               name, email, message: msg, createdAt: new Date()
           });
+          
+          // E-posta gönder (Admin'e)
+          sendFeedbackEmail();
+          
           setStatus('success');
           setTimeout(() => setStatus(null), 3000);
           setName(''); setEmail(''); setMsg('');
@@ -594,7 +649,7 @@ const Hero = () => (
         <p className="text-xl text-gray-100 mb-8 max-w-lg">Sıra beklemeden, 7/24 ulaşabileceğin şef imzalı sağlıklı kaseler.</p>
         <div className="flex gap-4">
            <a href="#menu" className="bg-[#4F772D] hover:bg-[#3E6024] text-white px-8 py-4 rounded-full font-bold inline-flex items-center gap-2 transition-all hover:scale-105">Hemen Keşfet <ArrowRight size={20} /></a>
-           <a href={APP_LINK} target="_blank" rel="noopener noreferrer" className="bg-white text-[#132A13] px-8 py-4 rounded-full font-bold inline-flex items-center gap-2 transition-all hover:bg-gray-100">Uygulamayı İndir</a>
+           <a href="#app-section" target="_blank" rel="noopener noreferrer" className="bg-white text-[#132A13] px-8 py-4 rounded-full font-bold inline-flex items-center gap-2 transition-all hover:bg-gray-100">Uygulamayı İndir</a>
         </div>
       </div>
     </div>
@@ -758,7 +813,7 @@ const App = () => {
     }
     link.href = LOGO_URL;
 
-    // 3. Oturum Durumunu Dinle
+    // 3. Oturum Durumunu Dinle (Varsayılan Misafir Girişi YOK)
     if (auth) {
       const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
         setUser(currentUser);
