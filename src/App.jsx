@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapPin, Menu, X, ChevronDown, Leaf, ArrowRight, Sparkles, Send, User, LogIn, ShoppingBag, Phone, MessageCircle, Check, Zap, Filter, Mail, Star, Heart, Trash2, Plus, Minus, Info, Package, Utensils, LogOut, Eye, EyeOff, Loader2 } from 'lucide-react';
-// Firebase İçe Aktarımları (Google ve Şifre Sıfırlama Dahil)
+// Firebase İçe Aktarımları
 import { initializeApp } from 'firebase/app';
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile, signInAnonymously, GoogleAuthProvider, signInWithPopup, sendPasswordResetEmail } from 'firebase/auth';
 import { getFirestore, doc, setDoc, addDoc, collection } from 'firebase/firestore';
@@ -14,13 +14,13 @@ const APP_LINK = "https://gemini.google.com/share/4fc04afd1c2a";
 const ADMIN_EMAIL = "info@beecupco.com"; 
 
 // --- YAPAY ZEKA (GEMINI) ANAHTARI ---
-const apiKey = "AIzaSyC9i7Cq5vV3bQPr7vVOfoNzIFLNT5wf7DU";
+const apiKey = "AIzaSyAx9MQ8BZd3nzp9yTddorJ5w2ttYYlOSIw";
 
-// --- EMAILJS AYARLARI (GÜNCEL) ---
+// --- EMAILJS AYARLARI ---
 const EMAILJS_CONFIG = {
-  SERVICE_ID: "service_5nludkm", 
+  SERVICE_ID: "service_5nludkm", // Senin son düzelttiğin ID
   TEMPLATE_ID_WELCOME: "template_7fj3mce", 
-  TEMPLATE_ID_FEEDBACK: "template_g29anfl", // Senin son verdiğin doğru ID
+  TEMPLATE_ID_FEEDBACK: "template_g29anfl", 
   PUBLIC_KEY: "_m2hMVBLwxednDRNg"
 };
 
@@ -45,20 +45,10 @@ try {
   console.error("Firebase başlatılamadı:", e);
 }
 
-// --- RENK PALETİ ---
-const COLORS = {
-  primary: "#4F772D", // Ana Yeşil
-  secondary: "#90A955", // Açık Yeşil
-  accent: "#ECF39E", // Sarımtırak Yeşil
-  dark: "#132A13", // Koyu Metin
-  light: "#F7F9F4", // Zemin
-  white: "#FFFFFF",
-};
-
 // --- GENEL GÖRSELLER ---
 const IMAGES = {
-  heroBg: "https://images.unsplash.com/photo-1490645935967-10de6ba17061?auto=format&fit=crop&q=80&w=2000",
-  appMockup: "https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?auto=format&fit=crop&q=80&w=800",
+  heroBg: "https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&q=80&w=2000",
+  appMockup: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=800",
 };
 
 // --- LOKASYONLAR ---
@@ -74,34 +64,153 @@ const LOCATIONS = [
 
 // --- MENÜ ---
 const FULL_MENU = [
-  { id: 101, cat: "Bowl", name: "Ege Rüyası", price: 195, kcal: 420, isPopular: true, imgPackaged: "https://images.unsplash.com/photo-1543352634-a1c51d9f1fa7?auto=format&fit=crop&q=80&w=500", imgPlated: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=500", tags: ["Yüksek Protein", "Glutensiz"], desc: "Izgara tavuk, kinoa, nar, ceviz ve yeşillikler.", ingredients: "Marine edilmiş ızgara tavuk göğsü, haşlanmış kinoa, mevsim yeşillikleri, ayıklanmış nar taneleri, yerli ceviz içi, özel nar ekşisi sosu.", macros: { protein: "32g", carbs: "45g", fat: "12g" } },
-  { id: 102, cat: "Bowl", name: "Somon Poke", price: 240, kcal: 510, isPopular: true, imgPackaged: "https://images.unsplash.com/photo-1603082303693-f39b0403eb72?auto=format&fit=crop&q=80&w=500", imgPlated: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=500", tags: ["Omega-3", "Glutensiz"], desc: "Taze somon küpleri, avokado, edamame, salatalık.", ingredients: "Norveç somonu, dilimlenmiş avokado, soya fasulyesi (edamame), salatalık, susam, suşi pirinci, soya sosu.", macros: { protein: "28g", carbs: "50g", fat: "18g" } },
-  { id: 103, cat: "Bowl", name: "Teriyaki Tavuk", price: 210, kcal: 480, isPopular: false, imgPackaged: "https://images.unsplash.com/photo-1585032226651-759b368d7246?auto=format&fit=crop&q=80&w=500", imgPlated: "https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=500", tags: ["Sıcak"], desc: "Teriyaki soslu tavuk, pirinç, brokoli, susam.", ingredients: "Teriyaki soslu tavuk but, yasemin pirinci, haşlanmış brokoli, susam, taze soğan.", macros: { protein: "30g", carbs: "55g", fat: "10g" } },
-  { id: 104, cat: "Bowl", name: "Falafel Humus", price: 180, kcal: 390, isPopular: true, imgPackaged: "https://images.unsplash.com/photo-1604496862236-c43328b2d430?auto=format&fit=crop&q=80&w=500", imgPlated: "https://images.unsplash.com/photo-1541518763179-0e34e424fb23?w=500", tags: ["Vegan"], desc: "Çıtır falafel, pancarlı humus, roka, tahin sos.", ingredients: "Ev yapımı falafel topları, pancarlı humus, bebek roka, çeri domates, tahin sos.", macros: { protein: "15g", carbs: "40g", fat: "14g" } },
-  { id: 105, cat: "Bowl", name: "Mexican Fiesta", price: 220, kcal: 550, isPopular: false, imgPackaged: "https://images.unsplash.com/photo-1582499814723-22442273e626?auto=format&fit=crop&q=80&w=500", imgPlated: "https://images.unsplash.com/photo-1585238342024-78d387f4a707?w=500", tags: ["Acılı", "Vejeteryan"], desc: "Siyah fasulye, mısır, jalapeno, guacamole, salsa.", ingredients: "Meksika fasulyesi, mısır, jalapeno turşusu, guacamole, domates salsa, esmer pirinç.", macros: { protein: "18g", carbs: "60g", fat: "20g" } },
-  { id: 201, cat: "Salata", name: "Sezar Klasik", price: 170, kcal: 350, isPopular: true, imgPackaged: "https://images.unsplash.com/photo-1620917670397-a331343d3c64?auto=format&fit=crop&q=80&w=500", imgPlated: "https://images.unsplash.com/photo-1550304943-4f24f54ddde9?w=500", tags: ["Klasik"], desc: "Roman marulu, parmesan, kruton, sezar sos.", ingredients: "Taze roman marulu, parmesan peyniri rendesi, fırınlanmış kruton ekmekler, özel sezar sos.", macros: { protein: "12g", carbs: "25g", fat: "22g" } },
-  { id: 202, cat: "Salata", name: "Tulum Peynirli", price: 160, kcal: 280, imgPackaged: "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&q=80&w=500", imgPlated: "https://images.unsplash.com/photo-1540420773420-3366772f4999?w=500", tags: ["Vejeteryan"], desc: "Roka, tulum peyniri, ceviz, nar ekşisi.", ingredients: "Taze roka, İzmir tulum peyniri, ceviz içi, kurutulmuş domates, nar ekşisi sosu.", macros: { protein: "14g", carbs: "10g", fat: "18g" } },
-  { id: 203, cat: "Salata", name: "Asya Çıtır", price: 185, kcal: 320, imgPackaged: "https://images.unsplash.com/photo-1606757365690-3423421c933c?auto=format&fit=crop&q=80&w=500", imgPlated: "https://images.unsplash.com/photo-1625943553852-781c6dd46faa?w=500", tags: ["Vegan"], desc: "Lahana, havuç, yer fıstığı, zencefilli sos.", ingredients: "Kırmızı ve beyaz lahana, rendelenmiş havuç, kavrulmuş yer fıstığı, edamame.", macros: { protein: "10g", carbs: "20g", fat: "15g" } },
-  { id: 204, cat: "Salata", name: "Ton Balıklı", price: 195, kcal: 400, isPopular: false, imgPackaged: "https://images.unsplash.com/photo-1570560258879-af7f8e1447ac?auto=format&fit=crop&q=80&w=500", imgPlated: "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=500", tags: ["Yüksek Protein"], desc: "Ton balığı, yumurta, mısır, dereotu.", ingredients: "Yağı süzülmüş ton balığı, haşlanmış yumurta, süt mısır, dereotu, göbek marul.", macros: { protein: "35g", carbs: "15g", fat: "18g" } },
-  { id: 205, cat: "Salata", name: "Yeşil Detoks", price: 165, kcal: 250, imgPackaged: "https://images.unsplash.com/photo-1589302168068-964664d93dc0?auto=format&fit=crop&q=80&w=500", imgPlated: "https://images.unsplash.com/photo-1515543237350-b3eea1ec8082?w=500", tags: ["Diyet", "Vegan"], desc: "Ispanak, yeşil elma, kereviz sapı, limon sos.", ingredients: "Bebek ıspanak, dilimlenmiş yeşil elma, kereviz sapı, salatalık, maydanoz, limon sosu.", macros: { protein: "5g", carbs: "25g", fat: "8g" } },
-  { id: 301, cat: "Wrap", name: "Hindi Füme", price: 160, kcal: 380, isPopular: true, imgPackaged: "https://images.unsplash.com/photo-1625937329053-2db3839846c8?auto=format&fit=crop&q=80&w=500", imgPlated: "https://images.unsplash.com/photo-1626700051175-6818013e1d4f?w=500", tags: ["Yüksek Protein"], desc: "Tam buğday lavaş, hindi füme, labne.", ingredients: "Tam buğday unlu lavaş, hindi füme dilimleri, labne peyniri, marul, salatalık.", macros: { protein: "25g", carbs: "40g", fat: "12g" } },
-  { id: 302, cat: "Wrap", name: "Falafel Dürüm", price: 150, kcal: 340, imgPackaged: "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?auto=format&fit=crop&q=80&w=500", imgPlated: "https://images.unsplash.com/photo-1564834724105-918b73d1b9e0?w=500", tags: ["Vegan"], desc: "Falafel, humus, turşu, yeşillik (Tavuksuz).", ingredients: "Nohut falafel, ev yapımı humus, salatalık turşusu, maydanoz, lavaş.", macros: { protein: "12g", carbs: "50g", fat: "10g" } },
-  { id: 303, cat: "Wrap", name: "Acılı Karnabahar", price: 155, kcal: 320, imgPackaged: "https://images.unsplash.com/photo-1625937329053-2db3839846c8?auto=format&fit=crop&q=80&w=500", imgPlated: "https://images.unsplash.com/photo-1628840042765-356cda07504e?w=500", tags: ["Vejeteryan", "Acılı"], desc: "Baharatlı karnabahar, yoğurt sos, marul.", ingredients: "Fırınlanmış acı soslu karnabahar, süzme yoğurt sos, marul, lavaş.", macros: { protein: "8g", carbs: "35g", fat: "14g" } },
-  { id: 304, cat: "Wrap", name: "Tavuk Sezar Wrap", price: 165, kcal: 400, imgPackaged: "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?auto=format&fit=crop&q=80&w=500", imgPlated: "https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=500", tags: ["Yüksek Protein"], desc: "Izgara tavuk, parmesan, sezar sos.", ingredients: "Izgara tavuk dilimleri, parmesan peyniri, sezar sos, marul, lavaş.", macros: { protein: "30g", carbs: "30g", fat: "18g" } },
-  { id: 305, cat: "Wrap", name: "Thai Sebzeli", price: 160, kcal: 360, imgPackaged: "https://images.unsplash.com/photo-1625937329053-2db3839846c8?auto=format&fit=crop&q=80&w=500", imgPlated: "https://images.unsplash.com/photo-1559563362-c667ba5f5480?w=500", tags: ["Vegan"], desc: "Tofu, renkli biberler, yer fıstığı sosu.", ingredients: "Tofu, kırmızı ve sarı biber, taze soğan, yer fıstığı sosu, lavaş.", macros: { protein: "15g", carbs: "40g", fat: "16g" } },
-  { id: 401, cat: "Atıştırmalık", name: "Elma & Fıstık Ezmesi", price: 60, kcal: 190, imgPackaged: "https://images.unsplash.com/photo-1584559582128-b8be43b4342b?w=500", imgPlated: "https://images.unsplash.com/photo-1576675784432-994941412b3d?w=500", tags: ["Vegan"], desc: "Yeşil elma dilimleri, şekersiz fıstık ezmesi.", ingredients: "Granny Smith elma, %100 şekersiz fıstık ezmesi.", macros: { protein: "6g", carbs: "20g", fat: "10g" } },
-  { id: 402, cat: "Atıştırmalık", name: "Humus & Kraker", price: 70, kcal: 240, imgPackaged: "https://images.unsplash.com/photo-1584559582128-b8be43b4342b?w=500", imgPlated: "https://images.unsplash.com/photo-1577805947697-89e18249d767?w=500", tags: ["Vegan"], desc: "Ev yapımı humus, tam tahıllı kraker.", ingredients: "Nohut, tahin, limon, zeytinyağı, tam buğday kraker.", macros: { protein: "8g", carbs: "30g", fat: "12g" } },
-  { id: 403, cat: "Atıştırmalık", name: "Protein Topları", price: 55, kcal: 180, imgPackaged: "https://images.unsplash.com/photo-1584559582128-b8be43b4342b?w=500", imgPlated: "https://images.unsplash.com/photo-1604382354936-07c5d9983bd3?w=500", tags: ["Yüksek Protein"], desc: "Hurma, kakao, fındık topları.", ingredients: "Hurma püresi, kakao, fındık parçaları, whey protein tozu.", macros: { protein: "10g", carbs: "20g", fat: "8g" } },
-  { id: 404, cat: "Atıştırmalık", name: "Chia Puding", price: 90, kcal: 220, isPopular: true, imgPackaged: "https://images.unsplash.com/photo-1579353977828-2a4eab54c8fa?auto=format&fit=crop&q=80&w=500", imgPlated: "https://images.unsplash.com/photo-1584559582128-b8be43b4342b?w=500", tags: ["Tatlı", "Vegan"], desc: "Hindistan cevizi sütü, chia, meyve.", ingredients: "Hindistan cevizi sütü, chia tohumu, agave şurubu, orman meyveleri.", macros: { protein: "6g", carbs: "25g", fat: "12g" } },
-  { id: 405, cat: "Atıştırmalık", name: "Çiğ Kuruyemiş", price: 80, kcal: 260, imgPackaged: "https://images.unsplash.com/photo-1584559582128-b8be43b4342b?w=500", imgPlated: "https://images.unsplash.com/photo-1505576391880-b3f9d713dc4f?w=500", tags: ["Vegan"], desc: "Badem, kaju, ceviz karışımı.", ingredients: "Çiğ badem, çiğ kaju, ceviz içi.", macros: { protein: "10g", carbs: "8g", fat: "22g" } },
-  { id: 501, cat: "İçecek", name: "Green Juice", price: 85, kcal: 110, isPopular: true, imgPackaged: "https://images.unsplash.com/photo-1610970881699-44a5587cabec?w=500", imgPlated: "https://images.unsplash.com/photo-1610970881699-44a5587cabec?w=500", tags: ["Detox"], desc: "Ispanak, elma, limon, zencefil suyu.", ingredients: "Soğuk sıkım ıspanak, yeşil elma, salatalık, limon, zencefil.", macros: { protein: "2g", carbs: "26g", fat: "0g" } },
-  { id: 502, cat: "İçecek", name: "Kombucha", price: 90, kcal: 40, imgPackaged: "https://images.unsplash.com/photo-1622597467961-f052d33a9080?w=500", imgPlated: "https://images.unsplash.com/photo-1622597467961-f052d33a9080?w=500", tags: ["Probiyotik"], desc: "Doğal fermente çay.", ingredients: "Fermante siyah çay, şeker, probiyotik kültür.", macros: { protein: "0g", carbs: "10g", fat: "0g" } },
-  { id: 503, cat: "İçecek", name: "Zencefil Shot", price: 55, kcal: 20, imgPackaged: "https://images.unsplash.com/photo-1600271886742-f049cd451bba?w=500", imgPlated: "https://images.unsplash.com/photo-1600271886742-f049cd451bba?w=500", tags: ["Bağışıklık"], desc: "%100 zencefil ve limon suyu.", ingredients: "Taze zencefil suyu, limon suyu, zerdeçal, karabiber.", macros: { protein: "0g", carbs: "5g", fat: "0g" } },
-  { id: 504, cat: "İçecek", name: "Cold Brew", price: 80, kcal: 5, imgPackaged: "https://images.unsplash.com/photo-1517701550927-30cf4ba1dba5?w=500", imgPlated: "https://images.unsplash.com/photo-1517701550927-30cf4ba1dba5?w=500", tags: ["Kafein"], desc: "Soğuk demlenmiş kahve.", ingredients: "%100 Arabica kahve çekirdekleri, su.", macros: { protein: "0g", carbs: "1g", fat: "0g" } },
-  { id: 505, cat: "İçecek", name: "Su", price: 25, kcal: 0, imgPackaged: "https://images.unsplash.com/photo-1560714235-d145ba2f8109?w=500", imgPlated: "https://images.unsplash.com/photo-1560714235-d145ba2f8109?w=500", tags: [], desc: "Cam şişe kaynak suyu.", ingredients: "Doğal kaynak suyu.", macros: { protein: "0g", carbs: "0g", fat: "0g" } },
+  { 
+    id: 101, cat: "Bowl", name: "Ege Rüyası", price: 195, kcal: 420, isPopular: true,
+    imgPackaged: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&q=80&w=600",
+    imgPlated: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&q=80&w=600",
+    tags: ["Yüksek Protein", "Glutensiz"], desc: "Izgara tavuk, kinoa, nar, ceviz ve yeşillikler.",
+    ingredients: "Marine edilmiş ızgara tavuk göğsü, haşlanmış kinoa, mevsim yeşillikleri, ayıklanmış nar taneleri, yerli ceviz içi.",
+    macros: { protein: "32g", carbs: "45g", fat: "12g" }
+  },
+  { 
+    id: 102, cat: "Bowl", name: "Somon Poke", price: 240, kcal: 510, isPopular: true,
+    imgPackaged: "https://images.unsplash.com/photo-1623428187969-5da2dcea5ebf?auto=format&fit=crop&q=80&w=600", 
+    imgPlated: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&q=80&w=600", 
+    tags: ["Omega-3", "Glutensiz"], desc: "Taze somon küpleri, avokado, edamame, salatalık.",
+    ingredients: "Norveç somonu, dilimlenmiş avokado, soya fasulyesi (edamame), salatalık, susam, suşi pirinci.",
+    macros: { protein: "28g", carbs: "50g", fat: "18g" }
+  },
+  { 
+    id: 103, cat: "Bowl", name: "Teriyaki Tavuk", price: 210, kcal: 480, isPopular: false,
+    imgPackaged: "https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?auto=format&fit=crop&q=80&w=600", 
+    imgPlated: "https://images.unsplash.com/photo-1585032226651-759b368d7246?auto=format&fit=crop&q=80&w=600", 
+    tags: ["Sıcak"], desc: "Teriyaki soslu tavuk, pirinç, brokoli, susam.",
+    ingredients: "Teriyaki soslu tavuk but, yasemin pirinci, haşlanmış brokoli, susam, taze soğan.",
+    macros: { protein: "30g", carbs: "55g", fat: "10g" }
+  },
+  { 
+    id: 104, cat: "Bowl", name: "Falafel Humus", price: 180, kcal: 390, isPopular: true,
+    imgPackaged: "https://images.unsplash.com/photo-1593001874117-c99c800e3eb7?auto=format&fit=crop&q=80&w=600", 
+    imgPlated: "https://images.unsplash.com/photo-1541518763179-0e34e424fb23?auto=format&fit=crop&q=80&w=600", 
+    tags: ["Vegan"], desc: "Çıtır falafel, pancarlı humus, roka, tahin sos.",
+    ingredients: "Ev yapımı falafel topları, pancarlı humus, bebek roka, çeri domates, tahin sos.",
+    macros: { protein: "15g", carbs: "40g", fat: "14g" }
+  },
+  { 
+    id: 105, cat: "Bowl", name: "Mexican Fiesta", price: 220, kcal: 550, isPopular: false,
+    imgPackaged: "https://images.unsplash.com/photo-1582499814723-22442273e626?auto=format&fit=crop&q=80&w=600", 
+    imgPlated: "https://images.unsplash.com/photo-1585238342024-78d387f4a707?auto=format&fit=crop&q=80&w=600", 
+    tags: ["Acılı", "Vejeteryan"], desc: "Siyah fasulye, mısır, jalapeno, guacamole, salsa.",
+    ingredients: "Meksika fasulyesi, mısır, jalapeno turşusu, guacamole, domates salsa, esmer pirinç.",
+    macros: { protein: "18g", carbs: "60g", fat: "20g" }
+  },
+  { 
+    id: 201, cat: "Salata", name: "Sezar Klasik", price: 170, kcal: 350, isPopular: true,
+    imgPackaged: "https://images.unsplash.com/photo-1550304943-4f24f54ddde9?auto=format&fit=crop&q=80&w=600", 
+    imgPlated: "https://images.unsplash.com/photo-1620917670397-a331343d3c64?auto=format&fit=crop&q=80&w=600", 
+    tags: ["Klasik"], desc: "Roman marulu, parmesan, kruton, sezar sos.",
+    ingredients: "Taze roman marulu, parmesan peyniri rendesi, fırınlanmış kruton ekmekler, özel sezar sos.",
+    macros: { protein: "12g", carbs: "25g", fat: "22g" }
+  },
+  { 
+    id: 202, cat: "Salata", name: "Tulum Peynirli", price: 160, kcal: 280, 
+    imgPackaged: "https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&q=80&w=600", 
+    imgPlated: "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&q=80&w=600", 
+    tags: ["Vejeteryan"], desc: "Roka, tulum peyniri, ceviz, nar ekşisi.",
+    ingredients: "Taze roka, İzmir tulum peyniri, ceviz içi, kurutulmuş domates, nar ekşisi sosu.",
+    macros: { protein: "14g", carbs: "10g", fat: "18g" }
+  },
+  { 
+    id: 203, cat: "Salata", name: "Asya Çıtır", price: 185, kcal: 320, 
+    imgPackaged: "https://images.unsplash.com/photo-1625943553852-781c6dd46faa?auto=format&fit=crop&q=80&w=600", 
+    imgPlated: "https://images.unsplash.com/photo-1606757365690-3423421c933c?auto=format&fit=crop&q=80&w=600", 
+    tags: ["Vegan"], desc: "Lahana, havuç, yer fıstığı, zencefilli sos.",
+    ingredients: "Kırmızı ve beyaz lahana, rendelenmiş havuç, kavrulmuş yer fıstığı, edamame.",
+    macros: { protein: "10g", carbs: "20g", fat: "15g" }
+  },
+  { 
+    id: 204, cat: "Salata", name: "Ton Balıklı", price: 195, kcal: 400, isPopular: false,
+    imgPackaged: "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?auto=format&fit=crop&q=80&w=600", 
+    imgPlated: "https://images.unsplash.com/photo-1570560258879-af7f8e1447ac?auto=format&fit=crop&q=80&w=600", 
+    tags: ["Yüksek Protein"], desc: "Ton balığı, yumurta, mısır, dereotu.",
+    ingredients: "Yağı süzülmüş ton balığı, haşlanmış yumurta, süt mısır, dereotu, göbek marul.",
+    macros: { protein: "35g", carbs: "15g", fat: "18g" }
+  },
+  { 
+    id: 205, cat: "Salata", name: "Yeşil Detoks", price: 165, kcal: 250, 
+    imgPackaged: "https://images.unsplash.com/photo-1515543237350-b3eea1ec8082?auto=format&fit=crop&q=80&w=600", 
+    imgPlated: "https://images.unsplash.com/photo-1589302168068-964664d93dc0?auto=format&fit=crop&q=80&w=600", 
+    tags: ["Diyet", "Vegan"], desc: "Ispanak, yeşil elma, kereviz sapı, limon sos.",
+    ingredients: "Bebek ıspanak, dilimlenmiş yeşil elma, kereviz sapı, salatalık, maydanoz, limon sosu.",
+    macros: { protein: "5g", carbs: "25g", fat: "8g" }
+  },
+  { 
+    id: 301, cat: "Wrap", name: "Hindi Füme", price: 160, kcal: 380, isPopular: true,
+    imgPackaged: "https://images.unsplash.com/photo-1626700051175-6818013e1d4f?auto=format&fit=crop&q=80&w=600", 
+    imgPlated: "https://images.unsplash.com/photo-1625937329053-2db3839846c8?auto=format&fit=crop&q=80&w=600", 
+    tags: ["Yüksek Protein"], desc: "Tam buğday lavaş, hindi füme, labne.",
+    ingredients: "Tam buğday unlu lavaş, hindi füme dilimleri, labne peyniri, marul, salatalık.",
+    macros: { protein: "25g", carbs: "40g", fat: "12g" }
+  },
+  { 
+    id: 302, cat: "Wrap", name: "Falafel Dürüm", price: 150, kcal: 340, 
+    imgPackaged: "https://images.unsplash.com/photo-1564834724105-918b73d1b9e0?auto=format&fit=crop&q=80&w=600", 
+    imgPlated: "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?auto=format&fit=crop&q=80&w=600", 
+    tags: ["Vegan"], desc: "Falafel, humus, turşu, yeşillik (Tavuksuz).",
+    ingredients: "Nohut falafel, ev yapımı humus, salatalık turşusu, maydanoz, lavaş.",
+    macros: { protein: "12g", carbs: "50g", fat: "10g" }
+  },
+  { 
+    id: 303, cat: "Wrap", name: "Acılı Karnabahar", price: 155, kcal: 320, 
+    imgPackaged: "https://images.unsplash.com/photo-1628840042765-356cda07504e?auto=format&fit=crop&q=80&w=600", 
+    imgPlated: "https://images.unsplash.com/photo-1625937329053-2db3839846c8?auto=format&fit=crop&q=80&w=600", 
+    tags: ["Vejeteryan", "Acılı"], desc: "Baharatlı karnabahar, yoğurt sos, marul.", 
+    ingredients: "Fırınlanmış acı soslu karnabahar, süzme yoğurt sos, marul, lavaş.", 
+    macros: { protein: "8g", carbs: "35g", fat: "14g" } 
+  },
+  { 
+    id: 304, cat: "Wrap", name: "Tavuk Sezar Wrap", price: 165, kcal: 400, 
+    imgPackaged: "https://images.unsplash.com/photo-1565299585323-38d6b0865b47?auto=format&fit=crop&q=80&w=600", 
+    imgPlated: "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?auto=format&fit=crop&q=80&w=600", 
+    tags: ["Yüksek Protein"], desc: "Izgara tavuk, parmesan, sezar sos.", 
+    ingredients: "Izgara tavuk dilimleri, parmesan peyniri, sezar sos, marul, lavaş.", 
+    macros: { protein: "30g", carbs: "30g", fat: "18g" } 
+  },
+  { 
+    id: 305, cat: "Wrap", name: "Thai Sebzeli", price: 160, kcal: 360, 
+    imgPackaged: "https://images.unsplash.com/photo-1559563362-c667ba5f5480?auto=format&fit=crop&q=80&w=600", 
+    imgPlated: "https://images.unsplash.com/photo-1625937329053-2db3839846c8?auto=format&fit=crop&q=80&w=600", 
+    tags: ["Vegan"], desc: "Tofu, renkli biberler, yer fıstığı sosu.", 
+    ingredients: "Tofu, kırmızı ve sarı biber, taze soğan, yer fıstığı sosu, lavaş.", 
+    macros: { protein: "15g", carbs: "40g", fat: "16g" } 
+  },
+  { id: 401, cat: "Atıştırmalık", name: "Elma & Fıstık Ezmesi", price: 60, kcal: 190, imgPackaged: "https://images.unsplash.com/photo-1584559582128-b8be43b4342b?auto=format&fit=crop&q=80&w=600", imgPlated: "https://images.unsplash.com/photo-1576675784432-994941412b3d?auto=format&fit=crop&q=80&w=600", tags: ["Vegan"], desc: "Yeşil elma dilimleri, şekersiz fıstık ezmesi.", ingredients: "Granny Smith elma, %100 şekersiz fıstık ezmesi.", macros: { protein: "6g", carbs: "20g", fat: "10g" } },
+  { id: 402, cat: "Atıştırmalık", name: "Humus & Kraker", price: 70, kcal: 240, imgPackaged: "https://images.unsplash.com/photo-1584559582128-b8be43b4342b?auto=format&fit=crop&q=80&w=600", imgPlated: "https://images.unsplash.com/photo-1577805947697-89e18249d767?auto=format&fit=crop&q=80&w=600", tags: ["Vegan"], desc: "Ev yapımı humus, tam tahıllı kraker.", ingredients: "Nohut, tahin, limon, zeytinyağı, tam buğday kraker.", macros: { protein: "8g", carbs: "30g", fat: "12g" } },
+  { id: 403, cat: "Atıştırmalık", name: "Protein Topları", price: 55, kcal: 180, imgPackaged: "https://images.unsplash.com/photo-1584559582128-b8be43b4342b?auto=format&fit=crop&q=80&w=600", imgPlated: "https://images.unsplash.com/photo-1604382354936-07c5d9983bd3?auto=format&fit=crop&q=80&w=600", tags: ["Yüksek Protein"], desc: "Hurma, kakao, fındık topları.", ingredients: "Hurma püresi, kakao, fındık parçaları, whey protein tozu.", macros: { protein: "10g", carbs: "20g", fat: "8g" } },
+  { id: 404, cat: "Atıştırmalık", name: "Chia Puding", price: 90, kcal: 220, isPopular: true, imgPackaged: "https://images.unsplash.com/photo-1579353977828-2a4eab54c8fa?auto=format&fit=crop&q=80&w=600", imgPlated: "https://images.unsplash.com/photo-1584559582128-b8be43b4342b?auto=format&fit=crop&q=80&w=600", tags: ["Tatlı", "Vegan"], desc: "Hindistan cevizi sütü, chia, meyve.", ingredients: "Hindistan cevizi sütü, chia tohumu, agave şurubu, orman meyveleri.", macros: { protein: "6g", carbs: "25g", fat: "12g" } },
+  { id: 405, cat: "Atıştırmalık", name: "Çiğ Kuruyemiş", price: 80, kcal: 260, imgPackaged: "https://images.unsplash.com/photo-1584559582128-b8be43b4342b?auto=format&fit=crop&q=80&w=600", imgPlated: "https://images.unsplash.com/photo-1505576391880-b3f9d713dc4f?auto=format&fit=crop&q=80&w=600", tags: ["Vegan"], desc: "Badem, kaju, ceviz karışımı.", ingredients: "Çiğ badem, çiğ kaju, ceviz içi.", macros: { protein: "10g", carbs: "8g", fat: "22g" } },
+  { id: 501, cat: "İçecek", name: "Green Juice", price: 85, kcal: 110, isPopular: true, imgPackaged: "https://images.unsplash.com/photo-1610970881699-44a5587cabec?auto=format&fit=crop&q=80&w=600", imgPlated: "https://images.unsplash.com/photo-1610970881699-44a5587cabec?auto=format&fit=crop&q=80&w=600", tags: ["Detox"], desc: "Ispanak, elma, limon, zencefil suyu.", ingredients: "Soğuk sıkım ıspanak, yeşil elma, salatalık, limon, zencefil.", macros: { protein: "2g", carbs: "26g", fat: "0g" } },
+  { id: 502, cat: "İçecek", name: "Kombucha", price: 90, kcal: 40, imgPackaged: "https://images.unsplash.com/photo-1622597467961-f052d33a9080?auto=format&fit=crop&q=80&w=600", imgPlated: "https://images.unsplash.com/photo-1622597467961-f052d33a9080?auto=format&fit=crop&q=80&w=600", tags: ["Probiyotik"], desc: "Doğal fermente çay.", ingredients: "Fermante siyah çay, şeker, probiyotik kültür.", macros: { protein: "0g", carbs: "10g", fat: "0g" } },
+  { id: 503, cat: "İçecek", name: "Zencefil Shot", price: 55, kcal: 20, imgPackaged: "https://images.unsplash.com/photo-1600271886742-f049cd451bba?auto=format&fit=crop&q=80&w=600", imgPlated: "https://images.unsplash.com/photo-1600271886742-f049cd451bba?auto=format&fit=crop&q=80&w=600", tags: ["Bağışıklık"], desc: "%100 zencefil ve limon suyu.", ingredients: "Taze zencefil suyu, limon suyu, zerdeçal, karabiber.", macros: { protein: "0g", carbs: "5g", fat: "0g" } },
+  { id: 504, cat: "İçecek", name: "Cold Brew", price: 80, kcal: 5, imgPackaged: "https://images.unsplash.com/photo-1517701550927-30cf4ba1dba5?auto=format&fit=crop&q=80&w=600", imgPlated: "https://images.unsplash.com/photo-1517701550927-30cf4ba1dba5?auto=format&fit=crop&q=80&w=600", tags: ["Kafein"], desc: "Soğuk demlenmiş kahve.", ingredients: "%100 Arabica kahve çekirdekleri, su.", macros: { protein: "0g", carbs: "1g", fat: "0g" } },
+  { id: 505, cat: "İçecek", name: "Su", price: 25, kcal: 0, imgPackaged: "https://images.unsplash.com/photo-1560714235-d145ba2f8109?auto=format&fit=crop&q=80&w=600", imgPlated: "https://images.unsplash.com/photo-1560714235-d145ba2f8109?auto=format&fit=crop&q=80&w=600", tags: [], desc: "Cam şişe kaynak suyu.", ingredients: "Doğal kaynak suyu.", macros: { protein: "0g", carbs: "0g", fat: "0g" } },
 ];
 
 // --- BİLEŞENLER ---
+
+// --- BİLEŞEN: SCROLL ANİMASYON (ScrollReveal) - TEK VE DOĞRU ---
+const ScrollReveal = ({ children, delay = 0 }) => {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 50 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-100px" }}
+      transition={{ duration: 0.8, delay: delay, ease: "easeOut" }}
+    >
+      {children}
+    </motion.div>
+  );
+};
 
 // ÜRÜN DETAY MODALI
 const ProductDetailModal = ({ product, onClose, onAddToCart }) => {
@@ -131,7 +240,6 @@ const ProductDetailModal = ({ product, onClose, onAddToCart }) => {
   );
 };
 
-// SEPET DRAWER
 const CartDrawer = ({ isOpen, onClose, cart, removeFromCart, total }) => {
   return (
     <AnimatePresence>
@@ -149,9 +257,9 @@ const CartDrawer = ({ isOpen, onClose, cart, removeFromCart, total }) => {
   );
 };
 
-// --- AUTH MODAL (ŞİFRE SIFIRLAMA & GOOGLE DAHİL) ---
+// --- AUTH MODAL ---
 const AuthModal = ({ type, onClose }) => {
-  const [mode, setMode] = useState(type); // 'login', 'register', 'reset'
+  const [mode, setMode] = useState(type); 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
@@ -173,7 +281,6 @@ const AuthModal = ({ type, onClose }) => {
     }
   };
 
-  // ŞİFRE SIFIRLAMA
   const handlePasswordReset = async () => {
     if (!email) { setError("Lütfen e-posta adresinizi yazın."); return; }
     setLoading(true); setError(''); setSuccessMsg('');
@@ -188,7 +295,6 @@ const AuthModal = ({ type, onClose }) => {
     } finally { setLoading(false); }
   };
 
-  // GOOGLE GİRİŞİ
   const handleGoogleLogin = async () => {
     if (!auth) return;
     setError('');
@@ -248,7 +354,6 @@ const AuthModal = ({ type, onClose }) => {
           <h2 className="text-2xl font-bold text-[#132A13] mb-2">{mode === 'login' ? "Giriş Yap" : mode === 'register' ? "Kayıt Ol" : "Şifre Yenileme"}</h2>
           {mode === 'reset' && <p className="text-sm text-gray-500">E-posta adresini gir, sana sıfırlama linki gönderelim.</p>}
         </div>
-        
         <div className="space-y-4">
            {mode === 'reset' ? (
              <>
@@ -276,7 +381,7 @@ const AuthModal = ({ type, onClose }) => {
   );
 };
 
-// GÖRÜŞ BİLDİR
+// --- GÖRÜŞ BİLDİR ---
 const FeedbackSection = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -323,7 +428,7 @@ const FeedbackSection = () => {
   );
 };
 
-// AI CHAT WIDGET
+// --- AI CHAT WIDGET (GEMINI 1.5 FLASH - DÜZELTİLDİ) ---
 const AIChatWidget = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([{ role: 'assistant', text: "Merhaba! Ben BeeCup Asistanı. Bugün senin için ne hazırlayalım? 🥗" }]);
@@ -340,13 +445,28 @@ const AIChatWidget = () => {
     setLoading(true);
     try {
       if (!apiKey) throw new Error("API Key eksik");
-      const systemPrompt = `Sen BeeCup'ın asistanısın. Menü: ${JSON.stringify(FULL_MENU)}. Kullanıcıya kısa öneri yap.`;
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ contents: [{ parts: [{ text: systemPrompt + " User: " + userText }] }] }) });
-      if (!response.ok) throw new Error('API Error');
+      const systemPrompt = `Sen BeeCup'ın asistanısın. Menü: ${JSON.stringify(FULL_MENU)}. Kullanıcıya kısa, samimi ve satışa yönlendirici öneriler yap.`;
+      // v1beta ve gemini-1.5-flash URL'si
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, { 
+          method: "POST", 
+          headers: { "Content-Type": "application/json" }, 
+          body: JSON.stringify({ 
+              contents: [{ 
+                  parts: [{ text: systemPrompt + " Müşteri dedi ki: " + userText }] 
+              }] 
+          }) 
+      });
+
+      if (!response.ok) {
+          const errData = await response.json();
+          console.error("AI HATA:", errData);
+          throw new Error(errData.error?.message || 'API Hatası');
+      }
       const data = await response.json();
-      setMessages(prev => [...prev, { role: 'assistant', text: data.candidates?.[0]?.content?.parts?.[0]?.text || "Harika bir seçim!" }]);
+      const aiResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || "Harika bir seçim!";
+      setMessages(prev => [...prev, { role: 'assistant', text: aiResponse }]);
     } catch (e) { 
-        console.log("AI Hatası:", e);
+        console.error("AI Hatası Detayı:", e);
         setMessages(prev => [...prev, { role: 'assistant', text: "Şu an bağlantı kuramıyorum ama menümüz harika! 🥗" }]); 
     } finally { setLoading(false); }
   };
@@ -367,71 +487,6 @@ const AIChatWidget = () => {
   );
 };
 
-// 2. NAVBAR
-const Navbar = ({ onAuthOpen, cartCount, onCartClick, user, onLogout }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [animateCart, setAnimateCart] = useState(false);
-  useEffect(() => { if (cartCount > 0) { setAnimateCart(true); const timer = setTimeout(() => setAnimateCart(false), 300); return () => clearTimeout(timer); } }, [cartCount]);
-
-  return (
-    <nav className="sticky top-0 z-40 bg-white/95 backdrop-blur-md shadow-sm border-b border-gray-100 font-sans">
-      <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-        <div className="flex items-center gap-10">
-          <div className="flex items-center gap-2 cursor-pointer" onClick={() => window.scrollTo(0,0)}><img src={LOGO_URL} alt="BeeCup" className="h-10 w-auto object-contain" onError={(e) => {e.target.style.display='none'; e.target.nextSibling.style.display='block'}}/><span className="font-bold text-2xl tracking-tight text-[#4F772D]">BeeCup</span></div>
-          <div className="hidden md:flex gap-8 text-sm font-bold tracking-wide text-gray-600"><a href="#menu" className="hover:text-[#4F772D] transition-colors">MENÜ</a><a href="#app-section" className="hover:text-[#4F772D] transition-colors">UYGULAMA</a><a href="#beebul" className="hover:text-[#4F772D] transition-colors">BEEBUL</a></div>
-        </div>
-        <div className="hidden md:flex items-center gap-4">
-          {user ? (
-            <div className="flex items-center gap-4"><div className="text-sm font-bold text-[#4F772D] flex items-center gap-2"><User size={18} /> {user.isAnonymous ? 'Misafir' : (user.displayName || user.email.split('@')[0])}</div><button onClick={onLogout} className="text-gray-500 hover:text-red-500" title="Çıkış Yap"><LogOut size={18} /></button></div>
-          ) : (
-            <><button onClick={() => onAuthOpen('login')} className="flex items-center gap-2 text-gray-600 hover:text-[#4F772D] font-medium text-sm px-3 py-2"><LogIn size={18} /> Giriş</button><button onClick={() => onAuthOpen('register')} className="flex items-center gap-2 text-white px-5 py-2.5 rounded-full font-bold text-sm hover:bg-[#3E6024] transition-all bg-[#4F772D]"><User size={18} /> Kayıt Ol</button></>
-          )}
-          <motion.button onClick={onCartClick} animate={animateCart ? { rotate: [0, -15, 15, -15, 15, 0] } : {}} className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors relative ml-2"><ShoppingBag size={20} />{cartCount > 0 && (<span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center border-2 border-white">{cartCount}</span>)}</motion.button>
-        </div>
-        <button className="md:hidden" onClick={() => setIsOpen(!isOpen)}>{isOpen ? <X /> : <Menu />}</button>
-      </div>
-      <AnimatePresence>{isOpen && (<motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="absolute top-full left-0 w-full bg-white border-t shadow-lg z-50 flex flex-col"><div className="flex flex-col p-6 gap-4 font-medium text-gray-600"><a href="#menu" onClick={() => setIsOpen(false)} className="hover:text-[#4F772D]">Menü</a><a href="#app-section" onClick={() => setIsOpen(false)} className="hover:text-[#4F772D]">Uygulama</a><a href="#beebul" onClick={() => setIsOpen(false)} className="hover:text-[#4F772D]">BeeBul</a><hr />{user ? (<button onClick={() => { setIsOpen(false); onLogout(); }} className="flex items-center gap-2 text-left text-red-500"><LogOut size={16}/> Çıkış Yap</button>) : (<><button onClick={() => { setIsOpen(false); onAuthOpen('login'); }} className="flex items-center gap-2 text-left hover:text-[#4F772D]"><LogIn size={16}/> Giriş Yap</button><button onClick={() => { setIsOpen(false); onAuthOpen('register'); }} className="flex items-center gap-2 text-left text-[#4F772D] font-bold"><User size={16}/> Kayıt Ol</button></>)}</div></motion.div>)}</AnimatePresence>
-    </nav>
-  );
-};
-
-// 3. HERO
-const Hero = () => (
-  <div className="relative h-[600px] w-full overflow-hidden flex items-center"><div className="absolute inset-0"><img src={IMAGES.heroBg} className="w-full h-full object-cover" alt="Hero" /><div className="absolute inset-0 bg-black/40"></div></div><div className="relative z-10 max-w-7xl mx-auto px-6 w-full text-white"><div className="max-w-2xl"><div className="inline-flex items-center gap-2 bg-[#4F772D] px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest mb-6"><Leaf size={14} /> İstanbul'un En Taze Ağı</div><h1 className="text-5xl md:text-7xl font-bold leading-tight mb-6 font-display">Doğal Lezzet,<br/><span className="text-[#ECF39E]">Anında Seninle.</span></h1><p className="text-xl text-gray-100 mb-8 max-w-lg">Sıra beklemeden, 7/24 ulaşabileceğin şef imzalı sağlıklı kaseler.</p><div className="flex gap-4"><a href="#menu" className="bg-[#4F772D] hover:bg-[#3E6024] text-white px-8 py-4 rounded-full font-bold inline-flex items-center gap-2 transition-all hover:scale-105">Hemen Keşfet <ArrowRight size={20} /></a><a href="#app-section" target="_blank" rel="noopener noreferrer" className="bg-white text-[#132A13] px-8 py-4 rounded-full font-bold inline-flex items-center gap-2 transition-all hover:bg-gray-100">Uygulamayı İndir</a></div></div></div></div>
-);
-
-// 5. LOKASYONLAR
-const Locations = ({ onLocationSelect }) => {
-  return (
-    <section id="beebul" className="py-20 bg-white border-b border-gray-100"><div className="max-w-7xl mx-auto px-6"><div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6"><div><h2 className="text-4xl font-bold text-[#132A13] mb-2">BeeBul Noktaları</h2><p className="text-gray-600">Sana en yakın akıllı otomatı seç, stok durumunu ve menüsünü gör.</p></div><button className="bg-[#F0F5ED] text-[#4F772D] px-6 py-3 rounded-xl font-bold flex items-center gap-2 hover:bg-[#E0EBD9] transition-colors"><MapPin size={18} /> Haritada Göster</button></div><div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">{LOCATIONS.map((loc) => (<div key={loc.id} onClick={() => onLocationSelect(loc)} className="border border-gray-200 rounded-2xl p-6 hover:border-[#4F772D] hover:shadow-lg transition-all cursor-pointer group bg-white relative overflow-hidden"><div className="flex justify-between items-start mb-4"><div className="bg-[#F7F9F4] p-3 rounded-full group-hover:bg-[#4F772D] group-hover:text-white transition-colors"><Zap size={24} /></div><div className={`px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 ${loc.status === 'active' ? 'bg-green-100 text-green-700' : loc.status === 'low' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'}`}><span className={`w-2 h-2 rounded-full ${loc.status === 'active' ? 'bg-green-500' : loc.status === 'low' ? 'bg-yellow-500' : 'bg-red-500'}`}></span>{loc.status === 'active' ? 'Aktif' : loc.status === 'low' ? 'Az Stok' : 'Bakımda'}</div></div><h3 className="font-bold text-lg text-[#132A13] mb-1">{loc.name}</h3><p className="text-sm text-gray-500 mb-4 flex items-center gap-1"><MapPin size={14}/> {loc.distance} uzakta</p><div className="flex items-center justify-between text-xs text-gray-400 border-t pt-4"><span>Stok: <span className="text-gray-700 font-bold">{loc.stock}</span></span><span className="group-hover:translate-x-1 transition-transform text-[#4F772D] font-bold flex items-center">Menüyü Gör <ArrowRight size={12} className="ml-1"/></span></div></div>))}</div></div></section>
-  );
-};
-
-// 6. MENÜ
-const MenuSection = ({ selectedLocation, onAddToCart, onProductClick }) => {
-  const [activeCat, setActiveCat] = useState("Çok Sevilenler");
-  const [activeFilter, setActiveFilter] = useState(null);
-  const filteredItems = FULL_MENU.filter(item => {
-    const catMatch = activeCat === "Çok Sevilenler" ? item.isPopular : (activeCat === "Tümü" || item.cat === activeCat);
-    const filterMatch = activeFilter ? item.tags.includes(activeFilter) : true;
-    return catMatch && filterMatch;
-  });
-
-  return (
-    <section id="menu" className="py-24 bg-[#F7F9F4]"><div className="max-w-7xl mx-auto px-6"><div className="mb-10">{selectedLocation && (<motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="inline-flex items-center gap-2 bg-[#132A13] text-white px-4 py-2 rounded-lg text-sm font-bold mb-4 shadow-lg"><MapPin size={16} className="text-[#90A955]" /> {selectedLocation.name} Menüsü</motion.div>)}<h2 className="text-4xl font-bold text-[#132A13]">Güncel Menü</h2></div><div className="flex flex-col gap-6 mb-10"><div className="flex flex-wrap gap-2">{["Çok Sevilenler", "Bowl", "Salata", "Wrap", "Atıştırmalık", "İçecek"].map(cat => (<button key={cat} onClick={() => setActiveCat(cat)} className={`px-5 py-2 rounded-full text-sm font-bold transition-all border ${activeCat === cat ? 'bg-[#4F772D] text-white border-[#4F772D]' : 'bg-white text-gray-600 border-gray-200 hover:border-[#4F772D]'}`}>{cat}</button>))}</div><div className="flex items-center gap-3 p-4 bg-white rounded-xl border border-gray-200 shadow-sm"><div className="flex items-center gap-2 text-sm text-gray-500 font-bold border-r pr-4 mr-2"><Filter size={16} /> Beslenme Tercihi:</div><div className="flex flex-wrap gap-2">{["Yüksek Protein", "Vegan", "Vejeteryan", "Glutensiz", "Diyet"].map(f => (<button key={f} onClick={() => setActiveFilter(activeFilter === f ? null : f)} className={`text-xs font-bold px-3 py-1.5 rounded-full border transition-colors flex items-center gap-1 ${activeFilter === f ? 'bg-[#ECF39E] text-[#4F772D] border-[#4F772D]' : 'bg-transparent text-gray-500 border-gray-300 hover:border-[#4F772D]'}`}>{activeFilter === f && <Check size={12} />} {f}</button>))}</div></div></div><div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"><AnimatePresence mode='popLayout'>{filteredItems.map((item) => (<motion.div layout initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.9 }} key={item.id} onClick={() => onProductClick(item)} className="bg-white rounded-2xl p-4 shadow-sm hover:shadow-xl transition-all group border border-transparent hover:border-[#90A955] cursor-pointer"><div className="relative h-56 rounded-xl overflow-hidden mb-4 bg-gray-100 group"><img src={item.imgPackaged} className="absolute inset-0 w-full h-full object-cover transition-opacity duration-500 opacity-100 group-hover:opacity-0" /><img src={item.imgPlated} className="absolute inset-0 w-full h-full object-cover transition-opacity duration-500 opacity-0 group-hover:opacity-100" /><div className="absolute top-2 left-2 flex flex-wrap gap-1 z-20">{item.tags.slice(0,2).map(t => ( <span key={t} className="bg-white/90 backdrop-blur text-[10px] font-bold px-2 py-1 rounded text-[#132A13]">{t}</span> ))}</div></div><div className="flex justify-between items-start mb-1"><h3 className="font-bold text-[#132A13] text-lg">{item.name}</h3><span className="font-bold text-[#4F772D]">₺{item.price}</span></div><div className="text-xs text-gray-500 mb-3 line-clamp-2">{item.desc}</div><div className="flex items-center gap-2 text-xs text-gray-400 mb-4"><span className="flex items-center gap-0.5"><Zap size={12}/> {item.kcal} kcal</span> <span>•</span> <span>{item.cat}</span></div><button onClick={(e) => { e.stopPropagation(); onAddToCart(item); }} className="w-full bg-[#F0F5ED] text-[#4F772D] py-2 rounded-lg font-bold text-sm hover:bg-[#4F772D] hover:text-white transition-colors z-30 relative">Sepete Ekle</button></motion.div>))}</AnimatePresence></div>{filteredItems.length === 0 && <div className="text-center py-20 text-gray-400">Bu kategoride ürün bulunamadı. 🐝</div>}</div></section>
-  );
-};
-
-// 7. UYGULAMA
-const AppSection = () => (
-  <section id="app-section" className="py-20 bg-[#F0F5ED] overflow-hidden"><div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center gap-12"><div className="flex-1 space-y-6"><div className="inline-flex items-center gap-2 bg-[#132A13] text-white px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest"><Sparkles size={14} /> BeeCup App</div><h2 className="text-4xl md:text-5xl font-bold text-[#132A13] leading-tight">Tazelik Cebinde,<br/>Ödüller Seninle.</h2><p className="text-gray-600 text-lg">BeeCup uygulaması ile otomat stoklarını canlı takip et, siparişini önceden oluştur ve her alışverişte 'Bal Puan' kazan.</p><div className="flex flex-col sm:flex-row gap-4 pt-4"><a href={APP_LINK} target="_blank" rel="noopener noreferrer" className="bg-[#132A13] text-white px-8 py-4 rounded-xl font-bold flex items-center justify-center gap-3 hover:bg-black transition-all"><img src="https://www.svgrepo.com/show/303139/apple-logo.svg" className="w-6 h-6 filter invert" /> App Store</a><a href={APP_LINK} target="_blank" rel="noopener noreferrer" className="bg-[#132A13] text-white px-8 py-4 rounded-xl font-bold flex items-center justify-center gap-3 hover:bg-black transition-all"><img src="https://www.svgrepo.com/show/475656/google-color.svg" className="w-6 h-6" /> Google Play</a></div></div><div className="flex-1 relative h-[500px] w-full flex justify-center items-center"><div className="absolute w-[400px] h-[400px] bg-[#4F772D]/10 rounded-full blur-3xl"></div><img src={IMAGES.appMockup} className="relative z-10 h-full object-contain drop-shadow-2xl rotate-[-5deg] hover:rotate-0 transition-transform duration-500" /></div></div></section>
-);
-
-// --- FOOTER ---
-const Footer = () => (
-  <footer className="text-white py-16 bg-[#132A13]"><div className="max-w-7xl mx-auto px-6 grid grid-cols-1 md:grid-cols-4 gap-12"><div className="col-span-1 md:col-span-2"><div className="flex items-center gap-2 mb-6"><img src={LOGO_URL} alt="BeeCup" className="h-8 w-auto bg-white rounded p-0.5" onError={(e)=>{e.target.style.display='none'}}/><span className="font-bold text-2xl">BeeCup.</span></div><p className="text-gray-400 text-sm leading-relaxed max-w-sm">Doğal, sürdürülebilir ve teknolojik beslenme deneyimi.</p></div><div><h4 className="font-bold mb-6 text-[#90A955]">İletişim</h4><ul className="space-y-3 text-sm text-gray-400"><li className="flex items-center gap-2"><MapPin size={16}/> Galatasaray Üniversitesi, Ortaköy</li><li className="flex items-center gap-2"><Phone size={16}/> 0850 123 45 67</li><li className="flex items-center gap-2"><Mail size={16}/> info@beecupco.com</li></ul></div><div><h4 className="font-bold mb-6 text-[#90A955]">Uygulama</h4><a href={APP_LINK} target="_blank" rel="noopener noreferrer" className="block text-gray-400 hover:text-white mb-2">iOS App İndir</a><a href={APP_LINK} target="_blank" rel="noopener noreferrer" className="block text-gray-400 hover:text-white">Android App İndir</a></div></div><div className="max-w-7xl mx-auto px-6 mt-12 pt-8 border-t border-gray-800 text-center text-xs text-gray-500">© 2025 BeeCup Inc.</div></footer>
-);
-
 // --- ANA APP ---
 const App = () => {
   const [selectedLocation, setSelectedLocation] = useState(null);
@@ -443,6 +498,11 @@ const App = () => {
 
   useEffect(() => {
     document.title = "BeeCup | Şehrin En Taze Molası";
+    // Smooth scroll için CSS ekleme
+    const style = document.createElement('style');
+    style.innerHTML = `html { scroll-behavior: smooth; } .scroll-mt-32 { scroll-margin-top: 8rem; }`;
+    document.head.appendChild(style);
+
     let link = document.querySelector("link[rel~='icon']");
     if (!link) { link = document.createElement('link'); link.rel = 'icon'; document.getElementsByTagName('head')[0].appendChild(link); }
     link.href = LOGO_URL;
@@ -459,12 +519,35 @@ const App = () => {
   return (
     <div className="min-h-screen bg-[#F7F9F4] text-[#132A13]">
       <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Outfit:wght@300;400;600;800&display=swap'); body { font-family: 'DM Sans', sans-serif; } h1, h2, h3, .font-display { font-family: 'Outfit', sans-serif; } .scrollbar-hide::-webkit-scrollbar { display: none; } .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }`}</style>
+      
       <Navbar onAuthOpen={setAuthModalType} cartCount={cart.length} onCartClick={() => setIsCartOpen(true)} user={user} onLogout={handleLogout} />
-      <Hero />
-      <MenuSection selectedLocation={selectedLocation} onAddToCart={addToCart} onProductClick={setSelectedProduct} />
-      <AppSection />
-      <Locations onLocationSelect={handleLocationSelect} />
-      <FeedbackSection />
+      
+      <ScrollReveal>
+        <Hero />
+      </ScrollReveal>
+
+      <div className="scroll-mt-32" id="menu">
+        <ScrollReveal delay={0.2}>
+          <MenuSection selectedLocation={selectedLocation} onAddToCart={addToCart} onProductClick={setSelectedProduct} />
+        </ScrollReveal>
+      </div>
+
+      <div className="scroll-mt-32" id="app-section">
+        <ScrollReveal>
+          <AppSection />
+        </ScrollReveal>
+      </div>
+
+      <div className="scroll-mt-32" id="beebul">
+        <ScrollReveal>
+          <Locations onLocationSelect={handleLocationSelect} />
+        </ScrollReveal>
+      </div>
+
+      <ScrollReveal>
+        <FeedbackSection />
+      </ScrollReveal>
+
       <Footer />
       <AIChatWidget />
       <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} cart={cart} removeFromCart={removeFromCart} total={cartTotal} />
