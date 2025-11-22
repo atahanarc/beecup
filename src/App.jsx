@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapPin, Menu, X, ChevronDown, Leaf, ArrowRight, Sparkles, Send, User, LogIn, ShoppingBag, Phone, MessageCircle, Check, Zap, Filter, Mail, Star, Heart, Trash2, Plus, Minus, Info, Package, Utensils, LogOut, Eye, EyeOff, Loader2 } from 'lucide-react';
-// Firebase İçe Aktarımları (Google Eklendi)
+// Firebase İçe Aktarımları (Google ve Şifre Sıfırlama Dahil)
 import { initializeApp } from 'firebase/app';
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile, signInAnonymously, GoogleAuthProvider, signInWithPopup, getAdditionalUserInfo } from 'firebase/auth';
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile, signInAnonymously, GoogleAuthProvider, signInWithPopup, sendPasswordResetEmail } from 'firebase/auth';
 import { getFirestore, doc, setDoc, addDoc, collection } from 'firebase/firestore';
 // EmailJS İçe Aktarımı
 import emailjs from '@emailjs/browser';
@@ -16,11 +16,11 @@ const ADMIN_EMAIL = "info@beecupco.com";
 // --- YAPAY ZEKA (GEMINI) ANAHTARI ---
 const apiKey = "AIzaSyAx9MQ8BZd3nzp9yTddorJ5w2ttYYlOSIw";
 
-// --- EMAILJS AYARLARI ---
+// --- EMAILJS AYARLARI (GÜNCEL) ---
 const EMAILJS_CONFIG = {
-  SERVICE_ID: "service_5nludkm", 
+  SERVICE_ID: "service_ggxh0x9", 
   TEMPLATE_ID_WELCOME: "template_7fj3mce", 
-  TEMPLATE_ID_FEEDBACK: "template_g29anfi",
+  TEMPLATE_ID_FEEDBACK: "template_g29anfl", // Senin son verdiğin doğru ID
   PUBLIC_KEY: "_m2hMVBLwxednDRNg"
 };
 
@@ -149,15 +149,18 @@ const CartDrawer = ({ isOpen, onClose, cart, removeFromCart, total }) => {
   );
 };
 
-// --- AUTH MODAL (GÜNCELLENDİ: GOOGLE GİRİŞİ EKLENDİ) ---
+// --- AUTH MODAL (ŞİFRE SIFIRLAMA & GOOGLE DAHİL) ---
 const AuthModal = ({ type, onClose }) => {
-  const isLogin = type === 'login';
+  const [mode, setMode] = useState(type); // 'login', 'register', 'reset'
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [successMsg, setSuccessMsg] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+
+  useEffect(() => { setMode(type); setError(''); setSuccessMsg(''); }, [type]);
 
   const sendWelcomeEmail = (userName, userEmail) => {
     if (EMAILJS_CONFIG.PUBLIC_KEY) {
@@ -170,22 +173,33 @@ const AuthModal = ({ type, onClose }) => {
     }
   };
 
-  // --- GOOGLE İLE GİRİŞ FONKSİYONU ---
+  // ŞİFRE SIFIRLAMA
+  const handlePasswordReset = async () => {
+    if (!email) { setError("Lütfen e-posta adresinizi yazın."); return; }
+    setLoading(true); setError(''); setSuccessMsg('');
+    try {
+      await sendPasswordResetEmail(auth, email);
+      setSuccessMsg("Sıfırlama bağlantısı e-postana gönderildi! 📧");
+      setTimeout(() => { setMode('login'); setSuccessMsg(''); }, 4000);
+    } catch (err) {
+      if (err.code === 'auth/user-not-found') setError("Bu e-posta ile kayıtlı kullanıcı bulunamadı.");
+      else if (err.code === 'auth/invalid-email') setError("Geçersiz e-posta formatı.");
+      else setError("Bir hata oluştu. Lütfen tekrar deneyin.");
+    } finally { setLoading(false); }
+  };
+
+  // GOOGLE GİRİŞİ
   const handleGoogleLogin = async () => {
     if (!auth) return;
     setError('');
     try {
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
-      
-      // Kullanıcı detayları
       const user = result.user;
-      // Yeni kullanıcı mı kontrolü (Firebase metadata'dan)
       const { creationTime, lastSignInTime } = user.metadata;
       const isNewUser = creationTime === lastSignInTime;
 
       if (db) {
-        // Profil bilgilerini kaydet (merge: true sayesinde eski veri varsa silinmez)
         await setDoc(doc(db, 'users', user.uid), {
           fullName: user.displayName,
           email: user.email,
@@ -193,26 +207,20 @@ const AuthModal = ({ type, onClose }) => {
           lastLogin: new Date()
         }, { merge: true });
       }
-
-      // Sadece yeni kullanıcıysa mail at
-      if (isNewUser) {
-        sendWelcomeEmail(user.displayName, user.email);
-      }
-      
+      if (isNewUser) sendWelcomeEmail(user.displayName, user.email);
       onClose();
     } catch (err) {
       console.error(err);
-      setError("Google ile giriş yapılamadı. (Pop-up kapatıldı veya izin verilmedi)");
+      setError("Google ile giriş yapılamadı.");
     }
   };
-  // -----------------------------------
 
   const handleSubmit = async () => {
     if (!auth) { setError("Firebase bağlantısı yok!"); return; }
     setLoading(true); setError('');
 
     try {
-      if (isLogin) {
+      if (mode === 'login') {
         await signInWithEmailAndPassword(auth, email, password);
       } else {
         const cred = await createUserWithEmailAndPassword(auth, email, password);
@@ -227,7 +235,7 @@ const AuthModal = ({ type, onClose }) => {
       let msg = "Bir hata oluştu.";
       if (err.code === 'auth/email-already-in-use') msg = "Bu e-posta zaten kullanımda.";
       else if (err.code === 'auth/weak-password') msg = "Şifre çok zayıf.";
-      else if (err.code === 'permission-denied') msg = "Veritabanı izni yok.";
+      else if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') msg = "E-posta veya şifre hatalı.";
       setError(msg);
     } finally { setLoading(false); }
   };
@@ -236,26 +244,32 @@ const AuthModal = ({ type, onClose }) => {
     <div className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
       <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-white rounded-3xl p-8 w-full max-w-md relative shadow-2xl">
         <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"><X size={24} /></button>
-        <div className="text-center mb-6"><h2 className="text-2xl font-bold text-[#132A13] mb-2">{isLogin ? "Giriş Yap" : "Kayıt Ol"}</h2></div>
+        <div className="text-center mb-6">
+          <h2 className="text-2xl font-bold text-[#132A13] mb-2">{mode === 'login' ? "Giriş Yap" : mode === 'register' ? "Kayıt Ol" : "Şifre Yenileme"}</h2>
+          {mode === 'reset' && <p className="text-sm text-gray-500">E-posta adresini gir, sana sıfırlama linki gönderelim.</p>}
+        </div>
         
         <div className="space-y-4">
-           {/* GOOGLE BUTONU */}
-           <button onClick={handleGoogleLogin} className="w-full bg-white border border-gray-300 text-gray-700 py-3 rounded-xl font-bold hover:bg-gray-50 transition-colors flex items-center justify-center gap-2">
-             <img src="https://www.svgrepo.com/show/475656/google-color.svg" className="w-5 h-5" alt="Google" />
-             Google ile Devam Et
-           </button>
-
-           <div className="flex items-center gap-3 my-4">
-             <div className="h-px bg-gray-200 flex-1"></div>
-             <span className="text-gray-400 text-sm">veya e-posta ile</span>
-             <div className="h-px bg-gray-200 flex-1"></div>
-           </div>
-
-           {!isLogin && <input type="text" placeholder="Adın Soyadın" className="w-full p-3 rounded-xl border border-gray-200 focus:outline-none" value={fullName} onChange={e => setFullName(e.target.value)} />}
-           <input type="email" placeholder="E-posta" className="w-full p-3 rounded-xl border border-gray-200 focus:outline-none" value={email} onChange={e => setEmail(e.target.value)} />
-           <div className="relative"><input type={showPassword ? "text" : "password"} placeholder="Şifre" className="w-full p-3 rounded-xl border border-gray-200 focus:outline-none pr-10" value={password} onChange={e => setPassword(e.target.value)} /><button onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-3 text-gray-400"><Eye size={20} /></button></div>
-           {error && <div className="text-red-500 text-sm text-center font-bold">{error}</div>}
-           <button onClick={handleSubmit} disabled={loading} className="w-full bg-[#4F772D] text-white py-3 rounded-xl font-bold hover:bg-[#3E6024] transition-colors disabled:opacity-50">{loading ? "İşlem yapılıyor..." : (isLogin ? "Giriş Yap" : "Üye Ol")}</button>
+           {mode === 'reset' ? (
+             <>
+               <input type="email" placeholder="E-posta" className="w-full p-3 rounded-xl border border-gray-200 focus:outline-none" value={email} onChange={e => setEmail(e.target.value)} />
+               {successMsg && <div className="text-green-600 text-sm text-center font-bold bg-green-50 p-2 rounded-lg">{successMsg}</div>}
+               {error && <div className="text-red-500 text-sm text-center font-bold">{error}</div>}
+               <button onClick={handlePasswordReset} disabled={loading} className="w-full bg-[#4F772D] text-white py-3 rounded-xl font-bold hover:bg-[#3E6024] transition-colors disabled:opacity-50">{loading ? "Gönderiliyor..." : "Bağlantı Gönder"}</button>
+               <button onClick={() => setMode('login')} className="w-full text-gray-500 text-sm font-bold hover:text-[#4F772D] mt-2">Giriş Yap'a Dön</button>
+             </>
+           ) : (
+             <>
+               <button onClick={handleGoogleLogin} className="w-full bg-white border border-gray-300 text-gray-700 py-3 rounded-xl font-bold hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"><img src="https://www.svgrepo.com/show/475656/google-color.svg" className="w-5 h-5" alt="Google" /> Google ile Devam Et</button>
+               <div className="flex items-center gap-3 my-4"><div className="h-px bg-gray-200 flex-1"></div><span className="text-gray-400 text-sm">veya</span><div className="h-px bg-gray-200 flex-1"></div></div>
+               {mode === 'register' && <input type="text" placeholder="Adın Soyadın" className="w-full p-3 rounded-xl border border-gray-200 focus:outline-none" value={fullName} onChange={e => setFullName(e.target.value)} />}
+               <input type="email" placeholder="E-posta" className="w-full p-3 rounded-xl border border-gray-200 focus:outline-none" value={email} onChange={e => setEmail(e.target.value)} />
+               <div className="relative"><input type={showPassword ? "text" : "password"} placeholder="Şifre" className="w-full p-3 rounded-xl border border-gray-200 focus:outline-none pr-10" value={password} onChange={e => setPassword(e.target.value)} /><button onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-3 text-gray-400"><Eye size={20} /></button></div>
+               {mode === 'login' && (<div className="flex justify-end"><button onClick={() => setMode('reset')} className="text-xs text-gray-500 hover:text-[#4F772D] font-medium">Şifremi Unuttum?</button></div>)}
+               {error && <div className="text-red-500 text-sm text-center font-bold">{error}</div>}
+               <button onClick={handleSubmit} disabled={loading} className="w-full bg-[#4F772D] text-white py-3 rounded-xl font-bold hover:bg-[#3E6024] transition-colors disabled:opacity-50">{loading ? "İşlem yapılıyor..." : (mode === 'login' ? "Giriş Yap" : "Üye Ol")}</button>
+             </>
+           )}
         </div>
       </motion.div>
     </div>
