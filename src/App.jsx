@@ -14,7 +14,7 @@ const APP_LINK = "https://gemini.google.com/share/4fc04afd1c2a";
 const ADMIN_EMAIL = "info@beecupco.com"; 
 
 // --- YAPAY ZEKA (GEMINI) ANAHTARI ---
-const apiKey = "AIzaSyAx9MQ8BZd3nzp9yTddorJ5w2ttYYlOSIw";
+const apiKey = "AIzaSyC9i7Cq5vV3bQPr7vVOfoNzIFLNT5wf7DU";
 
 // --- EMAILJS AYARLARI (GÜNCEL) ---
 const EMAILJS_CONFIG = {
