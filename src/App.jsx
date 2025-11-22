@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MapPin, Menu, X, ChevronDown, Leaf, ArrowRight, Sparkles, Send, User, LogIn, ShoppingBag, Phone, MessageCircle, Check, Zap, Filter, Mail, Star, Heart, Trash2, Plus, Minus, Info, Package, Utensils, LogOut, Eye, EyeOff, Loader2 } from 'lucide-react';
-// Firebase İçe Aktarımları
+// Firebase İçe Aktarımları (Google Eklendi)
 import { initializeApp } from 'firebase/app';
-import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile, signInAnonymously } from 'firebase/auth';
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, updateProfile, signInAnonymously, GoogleAuthProvider, signInWithPopup, getAdditionalUserInfo } from 'firebase/auth';
 import { getFirestore, doc, setDoc, addDoc, collection } from 'firebase/firestore';
 // EmailJS İçe Aktarımı
 import emailjs from '@emailjs/browser';
@@ -17,7 +17,6 @@ const ADMIN_EMAIL = "info@beecupco.com";
 const apiKey = "AIzaSyAx9MQ8BZd3nzp9yTddorJ5w2ttYYlOSIw";
 
 // --- EMAILJS AYARLARI ---
-// Senin ekran görüntünden aldığım Service ID: service_ggxh0x9
 const EMAILJS_CONFIG = {
   SERVICE_ID: "service_ggxh0x9", 
   TEMPLATE_ID_WELCOME: "template_7fj3mce", 
@@ -42,9 +41,8 @@ try {
   app = initializeApp(firebaseConfig);
   auth = getAuth(app);
   db = getFirestore(app);
-  console.log("✅ Firebase bağlantısı başarılı.");
 } catch (e) {
-  console.error("❌ Firebase başlatılamadı:", e);
+  console.error("Firebase başlatılamadı:", e);
 }
 
 // --- RENK PALETİ ---
@@ -109,7 +107,6 @@ const FULL_MENU = [
 const ProductDetailModal = ({ product, onClose, onAddToCart }) => {
   const [isPlated, setIsPlated] = useState(true);
   if (!product) return null;
-
   return (
     <div className="fixed inset-0 z-[90] flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
       <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }} className="bg-white rounded-2xl overflow-hidden w-full max-w-4xl h-[85vh] flex flex-col md:flex-row relative shadow-2xl">
@@ -152,7 +149,7 @@ const CartDrawer = ({ isOpen, onClose, cart, removeFromCart, total }) => {
   );
 };
 
-// --- DETAYLI LOGLAYAN AUTH MODAL ---
+// --- AUTH MODAL (GÜNCELLENDİ: GOOGLE GİRİŞİ EKLENDİ) ---
 const AuthModal = ({ type, onClose }) => {
   const isLogin = type === 'login';
   const [email, setEmail] = useState('');
@@ -163,74 +160,76 @@ const AuthModal = ({ type, onClose }) => {
   const [showPassword, setShowPassword] = useState(false);
 
   const sendWelcomeEmail = (userName, userEmail) => {
-    console.log("📧 MAİL: Gönderme işlemi başlatılıyor...");
-    console.log("📧 MAİL: Parametreler ->", { 
-        service: EMAILJS_CONFIG.SERVICE_ID, 
-        template: EMAILJS_CONFIG.TEMPLATE_ID_WELCOME,
-        user: userName,
-        mail: userEmail
-    });
-
-    if (!EMAILJS_CONFIG.PUBLIC_KEY) {
-        console.error("📧 MAİL HATASI: Public Key bulunamadı!");
-        return;
+    if (EMAILJS_CONFIG.PUBLIC_KEY) {
+      emailjs.send(
+        EMAILJS_CONFIG.SERVICE_ID,
+        EMAILJS_CONFIG.TEMPLATE_ID_WELCOME,
+        { to_name: userName, to_email: userEmail },
+        EMAILJS_CONFIG.PUBLIC_KEY
+      ).then(() => {}, (err) => console.error(err));
     }
-
-    emailjs.send(
-      EMAILJS_CONFIG.SERVICE_ID,
-      EMAILJS_CONFIG.TEMPLATE_ID_WELCOME,
-      { to_name: userName, to_email: userEmail },
-      EMAILJS_CONFIG.PUBLIC_KEY
-    ).then(
-      (response) => {
-        console.log("✅ MAİL BAŞARILI! Sonuç:", response.status, response.text);
-        alert("Hoşgeldin maili başarıyla gönderildi! 🚀"); // Ekrana uyarı
-      },
-      (err) => {
-        console.error("❌ MAİL GİTMEDİ! Hata detayı:", err);
-        // alert("Mail hatası: " + JSON.stringify(err)); // İstersen bunu da açabilirsin
-      }
-    );
   };
 
+  // --- GOOGLE İLE GİRİŞ FONKSİYONU ---
+  const handleGoogleLogin = async () => {
+    if (!auth) return;
+    setError('');
+    try {
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      
+      // Kullanıcı detayları
+      const user = result.user;
+      // Yeni kullanıcı mı kontrolü (Firebase metadata'dan)
+      const { creationTime, lastSignInTime } = user.metadata;
+      const isNewUser = creationTime === lastSignInTime;
+
+      if (db) {
+        // Profil bilgilerini kaydet (merge: true sayesinde eski veri varsa silinmez)
+        await setDoc(doc(db, 'users', user.uid), {
+          fullName: user.displayName,
+          email: user.email,
+          role: 'customer',
+          lastLogin: new Date()
+        }, { merge: true });
+      }
+
+      // Sadece yeni kullanıcıysa mail at
+      if (isNewUser) {
+        sendWelcomeEmail(user.displayName, user.email);
+      }
+      
+      onClose();
+    } catch (err) {
+      console.error(err);
+      setError("Google ile giriş yapılamadı. (Pop-up kapatıldı veya izin verilmedi)");
+    }
+  };
+  // -----------------------------------
+
   const handleSubmit = async () => {
-    console.log("🚀 BUTON: İşlem başladı...");
-    if (!auth) { setError("Firebase bağlantısı yok!"); console.error("❌ HATA: Auth nesnesi yok."); return; }
+    if (!auth) { setError("Firebase bağlantısı yok!"); return; }
     setLoading(true); setError('');
 
     try {
       if (isLogin) {
-        console.log("🔑 GİRİŞ: Giriş deneniyor...");
         await signInWithEmailAndPassword(auth, email, password);
-        console.log("✅ GİRİŞ: Başarılı!");
       } else {
-        console.log("📝 KAYIT: Yeni üye oluşturuluyor...");
         const cred = await createUserWithEmailAndPassword(auth, email, password);
-        console.log("✅ KAYIT: Auth oluşturuldu. UID:", cred.user.uid);
-        
         await updateProfile(cred.user, { displayName: fullName });
-        console.log("✅ PROFİL: İsim güncellendi.");
-
         if (db) {
-           console.log("💾 VERİTABANI: Kayıt yazılıyor...");
-           // Basitleştirilmiş yol
            await setDoc(doc(db, 'users', cred.user.uid), { fullName, email, createdAt: new Date(), role: 'customer' });
-           console.log("✅ VERİTABANI: Yazma başarılı!");
         }
-
-        // Mail gönderme
-        console.log("📧 MAİL: Fonksiyon çağrılıyor...");
         sendWelcomeEmail(fullName, email);
       }
       onClose();
     } catch (err) {
-      console.error("💥 BÜYÜK HATA:", err);
       let msg = "Bir hata oluştu.";
       if (err.code === 'auth/email-already-in-use') msg = "Bu e-posta zaten kullanımda.";
       else if (err.code === 'auth/weak-password') msg = "Şifre çok zayıf.";
-      else if (err.code === 'permission-denied') msg = "Veritabanı izni yok (Rules hatası).";
+      else if (err.code === 'permission-denied') msg = "Veritabanı izni yok.";
       setError(msg);
-    } finally { setLoading(false); console.log("🏁 İŞLEM: Bitti."); }
+    } finally { setLoading(false); }
   };
 
   return (
@@ -238,7 +237,20 @@ const AuthModal = ({ type, onClose }) => {
       <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="bg-white rounded-3xl p-8 w-full max-w-md relative shadow-2xl">
         <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"><X size={24} /></button>
         <div className="text-center mb-6"><h2 className="text-2xl font-bold text-[#132A13] mb-2">{isLogin ? "Giriş Yap" : "Kayıt Ol"}</h2></div>
+        
         <div className="space-y-4">
+           {/* GOOGLE BUTONU */}
+           <button onClick={handleGoogleLogin} className="w-full bg-white border border-gray-300 text-gray-700 py-3 rounded-xl font-bold hover:bg-gray-50 transition-colors flex items-center justify-center gap-2">
+             <img src="https://www.svgrepo.com/show/475656/google-color.svg" className="w-5 h-5" alt="Google" />
+             Google ile Devam Et
+           </button>
+
+           <div className="flex items-center gap-3 my-4">
+             <div className="h-px bg-gray-200 flex-1"></div>
+             <span className="text-gray-400 text-sm">veya e-posta ile</span>
+             <div className="h-px bg-gray-200 flex-1"></div>
+           </div>
+
            {!isLogin && <input type="text" placeholder="Adın Soyadın" className="w-full p-3 rounded-xl border border-gray-200 focus:outline-none" value={fullName} onChange={e => setFullName(e.target.value)} />}
            <input type="email" placeholder="E-posta" className="w-full p-3 rounded-xl border border-gray-200 focus:outline-none" value={email} onChange={e => setEmail(e.target.value)} />
            <div className="relative"><input type={showPassword ? "text" : "password"} placeholder="Şifre" className="w-full p-3 rounded-xl border border-gray-200 focus:outline-none pr-10" value={password} onChange={e => setPassword(e.target.value)} /><button onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-3 text-gray-400"><Eye size={20} /></button></div>
@@ -264,7 +276,7 @@ const FeedbackSection = () => {
         EMAILJS_CONFIG.TEMPLATE_ID_FEEDBACK,
         { from_name: name, from_email: email, message: msg, to_email: ADMIN_EMAIL },
         EMAILJS_CONFIG.PUBLIC_KEY
-      ).then(() => console.log("Görüş maili iletildi."), (err) => console.error("Mail hatası:", err));
+      ).then(() => {}, (err) => console.error(err));
     }
   };
 
@@ -374,7 +386,7 @@ const Hero = () => (
   <div className="relative h-[600px] w-full overflow-hidden flex items-center"><div className="absolute inset-0"><img src={IMAGES.heroBg} className="w-full h-full object-cover" alt="Hero" /><div className="absolute inset-0 bg-black/40"></div></div><div className="relative z-10 max-w-7xl mx-auto px-6 w-full text-white"><div className="max-w-2xl"><div className="inline-flex items-center gap-2 bg-[#4F772D] px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-widest mb-6"><Leaf size={14} /> İstanbul'un En Taze Ağı</div><h1 className="text-5xl md:text-7xl font-bold leading-tight mb-6 font-display">Doğal Lezzet,<br/><span className="text-[#ECF39E]">Anında Seninle.</span></h1><p className="text-xl text-gray-100 mb-8 max-w-lg">Sıra beklemeden, 7/24 ulaşabileceğin şef imzalı sağlıklı kaseler.</p><div className="flex gap-4"><a href="#menu" className="bg-[#4F772D] hover:bg-[#3E6024] text-white px-8 py-4 rounded-full font-bold inline-flex items-center gap-2 transition-all hover:scale-105">Hemen Keşfet <ArrowRight size={20} /></a><a href="#app-section" target="_blank" rel="noopener noreferrer" className="bg-white text-[#132A13] px-8 py-4 rounded-full font-bold inline-flex items-center gap-2 transition-all hover:bg-gray-100">Uygulamayı İndir</a></div></div></div></div>
 );
 
-// 5. LOKASYONLAR (BEEBUL)
+// 5. LOKASYONLAR
 const Locations = ({ onLocationSelect }) => {
   return (
     <section id="beebul" className="py-20 bg-white border-b border-gray-100"><div className="max-w-7xl mx-auto px-6"><div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6"><div><h2 className="text-4xl font-bold text-[#132A13] mb-2">BeeBul Noktaları</h2><p className="text-gray-600">Sana en yakın akıllı otomatı seç, stok durumunu ve menüsünü gör.</p></div><button className="bg-[#F0F5ED] text-[#4F772D] px-6 py-3 rounded-xl font-bold flex items-center gap-2 hover:bg-[#E0EBD9] transition-colors"><MapPin size={18} /> Haritada Göster</button></div><div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">{LOCATIONS.map((loc) => (<div key={loc.id} onClick={() => onLocationSelect(loc)} className="border border-gray-200 rounded-2xl p-6 hover:border-[#4F772D] hover:shadow-lg transition-all cursor-pointer group bg-white relative overflow-hidden"><div className="flex justify-between items-start mb-4"><div className="bg-[#F7F9F4] p-3 rounded-full group-hover:bg-[#4F772D] group-hover:text-white transition-colors"><Zap size={24} /></div><div className={`px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 ${loc.status === 'active' ? 'bg-green-100 text-green-700' : loc.status === 'low' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700'}`}><span className={`w-2 h-2 rounded-full ${loc.status === 'active' ? 'bg-green-500' : loc.status === 'low' ? 'bg-yellow-500' : 'bg-red-500'}`}></span>{loc.status === 'active' ? 'Aktif' : loc.status === 'low' ? 'Az Stok' : 'Bakımda'}</div></div><h3 className="font-bold text-lg text-[#132A13] mb-1">{loc.name}</h3><p className="text-sm text-gray-500 mb-4 flex items-center gap-1"><MapPin size={14}/> {loc.distance} uzakta</p><div className="flex items-center justify-between text-xs text-gray-400 border-t pt-4"><span>Stok: <span className="text-gray-700 font-bold">{loc.stock}</span></span><span className="group-hover:translate-x-1 transition-transform text-[#4F772D] font-bold flex items-center">Menüyü Gör <ArrowRight size={12} className="ml-1"/></span></div></div>))}</div></div></section>
