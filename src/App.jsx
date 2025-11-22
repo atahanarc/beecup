@@ -18,7 +18,7 @@ const apiKey = "AIzaSyAx9MQ8BZd3nzp9yTddorJ5w2ttYYlOSIw";
 
 // --- EMAILJS AYARLARI ---
 const EMAILJS_CONFIG = {
-  SERVICE_ID: "service_ggxh0x9", 
+  SERVICE_ID: "service_ggxh0x9", // Eğer çalışmazsa panelden kontrol et (service_5nludkm olabilir)
   TEMPLATE_ID_WELCOME: "template_7fj3mce", 
   TEMPLATE_ID_FEEDBACK: "template_g29anfl", 
   PUBLIC_KEY: "_m2hMVBLwxednDRNg"
@@ -45,7 +45,7 @@ try {
   console.error("Firebase başlatılamadı:", e);
 }
 
-// --- GENEL GÖRSELLER ---
+// --- GENEL GÖRSELLER (KALİTELİ OLANLAR) ---
 const IMAGES = {
   heroBg: "https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&q=80&w=2000",
   appMockup: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=800",
@@ -62,7 +62,7 @@ const LOCATIONS = [
   { id: 7, name: "Teknopark İst.", status: "active", stock: "Yüksek", distance: "15km" },
 ];
 
-// --- MENÜ ---
+// --- MENÜ (DOĞRU RESİMLİ VERSİYON) ---
 const FULL_MENU = [
   { 
     id: 101, cat: "Bowl", name: "Ege Rüyası", price: 195, kcal: 420, isPopular: true,
@@ -74,8 +74,8 @@ const FULL_MENU = [
   },
   { 
     id: 102, cat: "Bowl", name: "Somon Poke", price: 240, kcal: 510, isPopular: true,
-    imgPackaged: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&q=80&w=600", 
-    imgPlated: "https://images.unsplash.com/photo-1623428187969-5da2dcea5ebf?auto=format&fit=crop&q=80&w=600", 
+    imgPackaged: "https://images.unsplash.com/photo-1623428187969-5da2dcea5ebf?auto=format&fit=crop&q=80&w=600", 
+    imgPlated: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&q=80&w=600", 
     tags: ["Omega-3", "Glutensiz"], desc: "Taze somon küpleri, avokado, edamame, salatalık.",
     ingredients: "Norveç somonu, dilimlenmiş avokado, soya fasulyesi (edamame), salatalık, susam, suşi pirinci.",
     macros: { protein: "28g", carbs: "50g", fat: "18g" }
@@ -413,7 +413,7 @@ const FeedbackSection = () => {
   );
 };
 
-// --- AI CHAT WIDGET (GEMINI 1.5 FLASH) ---
+// --- AI CHAT WIDGET (GEMINI 1.5 FLASH - HATA LOGLAMALI) ---
 const AIChatWidget = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([{ role: 'assistant', text: "Merhaba! Ben BeeCup Asistanı. Bugün senin için ne hazırlayalım? 🥗" }]);
@@ -428,39 +428,35 @@ const AIChatWidget = () => {
     const userText = input; setInput('');
     setMessages(prev => [...prev, { role: 'user', text: userText }]);
     setLoading(true);
-    
     try {
       if (!apiKey) throw new Error("API Key eksik");
+      const systemPrompt = `Sen BeeCup'ın asistanısın. Menü: ${JSON.stringify(FULL_MENU)}. Kullanıcıya kısa, samimi ve satışa yönlendirici öneriler yap.`;
       
-      const systemPrompt = `Sen BeeCup'ın asistanısın. Menü: ${JSON.stringify(FULL_MENU)}. Müşteriye kısa, samimi ve satışa yönlendirici öneriler yap.`;
-      
-      // v1beta ve gemini-1.5-flash kombinasyonu
+      // v1beta ve gemini-1.5-flash URL'si
       const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, { 
           method: "POST", 
           headers: { "Content-Type": "application/json" }, 
           body: JSON.stringify({ 
               contents: [{ 
-                  parts: [{ text: systemPrompt + " Müşteri: " + userText }] 
+                  parts: [{ text: systemPrompt + " Müşteri dedi ki: " + userText }] 
               }] 
           }) 
       });
 
       if (!response.ok) {
-          const errData = await response.json();
-          console.error("AI API HATASI:", errData);
-          throw new Error(`Bağlantı Hatası (${response.status})`);
+          // Hata durumunda konsola detay basalım
+          const errData = await response.json().catch(() => ({}));
+          console.error("AI HATA:", response.status, errData);
+          throw new Error(`API Hatası: ${response.status}`);
       }
 
       const data = await response.json();
       const aiResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || "Harika bir seçim!";
       setMessages(prev => [...prev, { role: 'assistant', text: aiResponse }]);
-
     } catch (e) { 
         console.error("AI Hatası:", e);
         setMessages(prev => [...prev, { role: 'assistant', text: "Şu an bağlantı kuramıyorum ama menümüz harika! 🥗" }]); 
-    } finally { 
-        setLoading(false); 
-    }
+    } finally { setLoading(false); }
   };
 
   return (
@@ -470,17 +466,7 @@ const AIChatWidget = () => {
         {isOpen && (
           <motion.div initial={{ opacity: 0, y: 50, scale: 0.9 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 50, scale: 0.9 }} className="fixed bottom-24 right-6 z-50 w-80 md:w-96 bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-100 flex flex-col max-h-[500px]">
             <div className="p-4 text-white flex items-center gap-2 bg-[#4F772D]"><Sparkles size={18} /><span className="font-bold">BeeCup Asistan</span></div>
-            <div className="flex-1 p-4 space-y-3 overflow-y-auto bg-[#F9F9F9] min-h-[300px]">
-                {messages.map((m, i) => (
-                    <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                        <div className={`max-w-[80%] p-3 rounded-xl text-sm ${m.role === 'user' ? 'bg-[#90A955] text-white' : 'bg-white border border-gray-200 text-gray-700'}`}>
-                            {m.text}
-                        </div>
-                    </div>
-                ))} 
-                {loading && <div className="text-xs text-gray-400 ml-2">Yazıyor...</div>}
-                <div ref={chatEndRef} />
-            </div>
+            <div className="flex-1 p-4 space-y-3 overflow-y-auto bg-[#F9F9F9] min-h-[300px]">{messages.map((m, i) => (<div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}><div className={`max-w-[80%] p-3 rounded-xl text-sm ${m.role === 'user' ? 'bg-[#90A955] text-white' : 'bg-white border border-gray-200 text-gray-700'}`}>{m.text}</div></div>))} {loading && <div className="text-xs text-gray-400 ml-2">Yazıyor...</div>}<div ref={chatEndRef} /></div>
             <div className="p-3 bg-white border-t"><div className="flex items-center bg-gray-100 rounded-full px-4 py-2"><input className="flex-1 bg-transparent outline-none text-sm" placeholder="Mesaj yaz..." value={input} onChange={e => setInput(e.target.value)} onKeyPress={e => e.key === 'Enter' && handleSend()} /><button onClick={handleSend} className="text-[#4F772D]"><Send size={18} /></button></div></div>
           </motion.div>
         )}
