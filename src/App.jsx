@@ -18,7 +18,7 @@ const apiKey = "AIzaSyAx9MQ8BZd3nzp9yTddorJ5w2ttYYlOSIw";
 
 // --- EMAILJS AYARLARI (GÜNCEL) ---
 const EMAILJS_CONFIG = {
-  SERVICE_ID: "service_ggxh0x9", 
+  SERVICE_ID: "service_5nludkm", 
   TEMPLATE_ID_WELCOME: "template_7fj3mce", 
   TEMPLATE_ID_FEEDBACK: "template_g29anfl", // Senin son verdiğin doğru ID
   PUBLIC_KEY: "_m2hMVBLwxednDRNg"
