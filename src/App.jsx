@@ -18,7 +18,7 @@ const apiKey = "AIzaSyAx9MQ8BZd3nzp9yTddorJ5w2ttYYlOSIw";
 
 // --- EMAILJS AYARLARI ---
 const EMAILJS_CONFIG = {
-  SERVICE_ID: "service_5nludkm", // Senin son düzelttiğin ID
+  SERVICE_ID: "service_5nludkm", 
   TEMPLATE_ID_WELCOME: "template_7fj3mce", 
   TEMPLATE_ID_FEEDBACK: "template_g29anfl", 
   PUBLIC_KEY: "_m2hMVBLwxednDRNg"
@@ -198,7 +198,35 @@ const FULL_MENU = [
 
 // --- BİLEŞENLER ---
 
-// --- BİLEŞEN: SCROLL ANİMASYON (ScrollReveal) - TEK VE DOĞRU ---
+// --- EKSİK OLAN NAVBAR BİLEŞENİ EKLENDİ ---
+const Navbar = ({ onAuthOpen, cartCount, onCartClick, user, onLogout }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [animateCart, setAnimateCart] = useState(false);
+  useEffect(() => { if (cartCount > 0) { setAnimateCart(true); const timer = setTimeout(() => setAnimateCart(false), 300); return () => clearTimeout(timer); } }, [cartCount]);
+
+  return (
+    <nav className="sticky top-0 z-40 bg-white/95 backdrop-blur-md shadow-sm border-b border-gray-100 font-sans">
+      <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+        <div className="flex items-center gap-10">
+          <div className="flex items-center gap-2 cursor-pointer" onClick={() => window.scrollTo(0,0)}><img src={LOGO_URL} alt="BeeCup" className="h-10 w-auto object-contain" onError={(e) => {e.target.style.display='none'; e.target.nextSibling.style.display='block'}}/><span className="font-bold text-2xl tracking-tight text-[#4F772D]">BeeCup</span></div>
+          <div className="hidden md:flex gap-8 text-sm font-bold tracking-wide text-gray-600"><a href="#menu" className="hover:text-[#4F772D] transition-colors">MENÜ</a><a href="#app-section" className="hover:text-[#4F772D] transition-colors">UYGULAMA</a><a href="#beebul" className="hover:text-[#4F772D] transition-colors">BEEBUL</a></div>
+        </div>
+        <div className="hidden md:flex items-center gap-4">
+          {user ? (
+            <div className="flex items-center gap-4"><div className="text-sm font-bold text-[#4F772D] flex items-center gap-2"><User size={18} /> {user.isAnonymous ? 'Misafir' : (user.displayName || user.email.split('@')[0])}</div><button onClick={onLogout} className="text-gray-500 hover:text-red-500" title="Çıkış Yap"><LogOut size={18} /></button></div>
+          ) : (
+            <><button onClick={() => onAuthOpen('login')} className="flex items-center gap-2 text-gray-600 hover:text-[#4F772D] font-medium text-sm px-3 py-2"><LogIn size={18} /> Giriş</button><button onClick={() => onAuthOpen('register')} className="flex items-center gap-2 text-white px-5 py-2.5 rounded-full font-bold text-sm hover:bg-[#3E6024] transition-all bg-[#4F772D]"><User size={18} /> Kayıt Ol</button></>
+          )}
+          <motion.button onClick={onCartClick} animate={animateCart ? { rotate: [0, -15, 15, -15, 15, 0] } : {}} className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-700 transition-colors relative ml-2"><ShoppingBag size={20} />{cartCount > 0 && (<span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center border-2 border-white">{cartCount}</span>)}</motion.button>
+        </div>
+        <button className="md:hidden" onClick={() => setIsOpen(!isOpen)}>{isOpen ? <X /> : <Menu />}</button>
+      </div>
+      <AnimatePresence>{isOpen && (<motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="absolute top-full left-0 w-full bg-white border-t shadow-lg z-50 flex flex-col"><div className="flex flex-col p-6 gap-4 font-medium text-gray-600"><a href="#menu" onClick={() => setIsOpen(false)} className="hover:text-[#4F772D]">Menü</a><a href="#app-section" onClick={() => setIsOpen(false)} className="hover:text-[#4F772D]">Uygulama</a><a href="#beebul" onClick={() => setIsOpen(false)} className="hover:text-[#4F772D]">BeeBul</a><hr />{user ? (<button onClick={() => { setIsOpen(false); onLogout(); }} className="flex items-center gap-2 text-left text-red-500"><LogOut size={16}/> Çıkış Yap</button>) : (<><button onClick={() => { setIsOpen(false); onAuthOpen('login'); }} className="flex items-center gap-2 text-left hover:text-[#4F772D]"><LogIn size={16}/> Giriş Yap</button><button onClick={() => { setIsOpen(false); onAuthOpen('register'); }} className="flex items-center gap-2 text-left text-[#4F772D] font-bold"><User size={16}/> Kayıt Ol</button></>)}</div></motion.div>)}</AnimatePresence>
+    </nav>
+  );
+};
+
+// --- BİLEŞEN: SCROLL ANİMASYON (ScrollReveal) ---
 const ScrollReveal = ({ children, delay = 0 }) => {
   return (
     <motion.div
