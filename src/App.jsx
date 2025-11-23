@@ -17,17 +17,20 @@ import emailjs from '@emailjs/browser';
 import ReactGA from "react-ga4";
 
 // --- 1. KONFİGÜRASYON ---
+// --- 1. KONFİGÜRASYON (GÜVENLİ MOD) ---
 const CONFIG = {
   adminEmail: "info@beecupco.com",
   instagramLink: "https://www.instagram.com/beecupco/#",
   logoUrl: "/logo.png",
-  gaMeasurementId: "G-XXXXXXXXXX", // Google Analytics Kodunu Buraya Yaz (Yoksa boş kalsın)
+  // Google Analytics ID'si (Varsa)
+  gaMeasurementId: "G-XXXXXXXXXX", 
   emailJs: {
     serviceId: "service_5nludkm",
     templateWelcome: "template_7fj3mce",
     templateFeedback: "template_g29anfl",
     publicKey: "_m2hMVBLwxednDRNg"
   },
+  // Şifreler artık Vercel ayarlarından okunacak (Güvenli)
   firebase: {
     apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
     authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
