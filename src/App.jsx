@@ -721,7 +721,7 @@ const MainLayout = () => {
       <AuthModal />
       <OfficeRequestModal />
       <LegalModal />
-      <DataSeeder /> {/* <-- İŞİN BİTİNCE BU SATIRI SİLEBİLİRSİN */}
+      
       <AnimatePresence>
         {selectedProduct && <ProductDetailModal product={selectedProduct} onClose={() => setSelectedProduct(null)} />}
       </AnimatePresence>
