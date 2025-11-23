@@ -10,7 +10,8 @@ import { initializeApp } from 'firebase/app';
 import { 
   getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, 
   signOut, onAuthStateChanged, updateProfile, GoogleAuthProvider, 
-  signInWithPopup, sendPasswordResetEmail 
+  signInWithPopup, sendPasswordResetEmail,
+  setPersistence, browserSessionPersistence // <-- YENİ EKLENENLER
 } from 'firebase/auth';
 import { getFirestore, addDoc, collection, getDocs, query } from 'firebase/firestore';
 import emailjs from '@emailjs/browser';
@@ -642,17 +643,24 @@ const AuthModal = () => {
     if (!auth) return;
     setLoading(true); setError('');
     try {
-        if (authModalType === 'login') await signInWithEmailAndPassword(auth, email, password);
+        // ÖNCE OTURUM TİPİNİ AYARLIYORUZ: Tarayıcı kapanınca çıkış yap (SESSION)
+        await setPersistence(auth, browserSessionPersistence);
+
+        if (authModalType === 'login') {
+            await signInWithEmailAndPassword(auth, email, password);
+        } 
         else if (authModalType === 'register') {
             const cred = await createUserWithEmailAndPassword(auth, email, password);
             await updateProfile(cred.user, { displayName: fullName });
-        } else if (authModalType === 'reset') {
+        } 
+        else if (authModalType === 'reset') {
             await sendPasswordResetEmail(auth, email);
             setError("Sıfırlama e-postası gönderildi."); setLoading(false); return;
         }
         setAuthModalType(null);
     } catch (e) {
-        setError(e.message);
+        setError(e.message); // Hata mesajını olduğu gibi gösterelim
+        console.error(e);
     } finally { setLoading(false); }
   };
 
