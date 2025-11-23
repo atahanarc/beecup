@@ -12,25 +12,29 @@ import {
   signOut, onAuthStateChanged, updateProfile, GoogleAuthProvider, 
   signInWithPopup, sendPasswordResetEmail 
 } from 'firebase/auth';
-import { getFirestore, addDoc, collection, getDocs, setDoc, doc, query } from 'firebase/firestore';
+import { getFirestore, addDoc, collection, getDocs, query } from 'firebase/firestore';
 import emailjs from '@emailjs/browser';
 import ReactGA from "react-ga4";
+import { Helmet, HelmetProvider } from 'react-helmet-async';
 
 // --- 1. KONFİGÜRASYON ---
-// --- 1. KONFİGÜRASYON (GÜVENLİ MOD) ---
 const CONFIG = {
   adminEmail: "info@beecupco.com",
   instagramLink: "https://www.instagram.com/beecupco/#",
   logoUrl: "/logo.png",
-  // Google Analytics ID'si (Varsa)
-  gaMeasurementId: "G-XXXXXXXXXX", 
+  
+  // --- ANALİTİK KİMLİKLERİ ---
+  gaMeasurementId: "G-XHMEKVW5ZW", // Google Analytics ID (Varsa yaz, yoksa boş kalsın)
+  facebookPixelId: "",             // Meta Pixel ID
+  hotjarId: "",                    // Hotjar ID
+  hotjarVersion: 6,
+
   emailJs: {
     serviceId: "service_5nludkm",
     templateWelcome: "template_7fj3mce",
     templateFeedback: "template_g29anfl",
     publicKey: "_m2hMVBLwxednDRNg"
   },
-  // Şifreler artık Vercel ayarlarından okunacak (Güvenli)
   firebase: {
     apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
     authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
@@ -51,57 +55,49 @@ try {
   }
 } catch (e) { console.error("Firebase Hatası:", e); }
 
-// --- 3. VERİ YÜKLEME ARACI (MENÜYÜ FIREBASE'E GÖNDERİR) ---
-// NOT: Bu bileşen menüyü veritabanına yüklemek içindir.
-const DataSeeder = () => {
-  const FULL_MENU_DATA = [
-      { id: 101, cat: "Bowl", name: "Ege Rüyası", price: 195, kcal: 420, isPopular: true, imgPackaged: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&q=80&w=600", imgPlated: "https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&q=80&w=600", tags: ["Yüksek Protein", "Glutensiz"], desc: "Izgara tavuk, kinoa, nar, ceviz ve yeşillikler.", ingredients: "Marine edilmiş ızgara tavuk göğsü, haşlanmış kinoa, mevsim yeşillikleri, ayıklanmış nar taneleri, yerli ceviz içi.", macros: { protein: "32g", carbs: "45g", fat: "12g" } },
-      { id: 102, cat: "Bowl", name: "Somon Poke", price: 240, kcal: 510, isPopular: true, imgPackaged: "https://images.unsplash.com/photo-1623428187969-5da2dcea5ebf?auto=format&fit=crop&q=80&w=600", imgPlated: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&q=80&w=600", tags: ["Omega-3", "Glutensiz"], desc: "Taze somon küpleri, avokado, edamame, salatalık.", ingredients: "Norveç somonu, dilimlenmiş avokado, soya fasulyesi (edamame), salatalık, susam, suşi pirinci.", macros: { protein: "28g", carbs: "50g", fat: "18g" } },
-      { id: 103, cat: "Bowl", name: "Teriyaki Tavuk", price: 210, kcal: 480, isPopular: false, imgPackaged: "https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?auto=format&fit=crop&q=80&w=600", imgPlated: "https://images.unsplash.com/photo-1585032226651-759b368d7246?auto=format&fit=crop&q=80&w=600", tags: ["Sıcak"], desc: "Teriyaki soslu tavuk, pirinç, brokoli, susam.", ingredients: "Teriyaki soslu tavuk but, yasemin pirinci, haşlanmış brokoli, susam, taze soğan.", macros: { protein: "30g", carbs: "55g", fat: "10g" } },
-      { id: 104, cat: "Bowl", name: "Falafel Humus", price: 180, kcal: 390, isPopular: true, imgPackaged: "https://images.unsplash.com/photo-1593001874117-c99c800e3eb7?auto=format&fit=crop&q=80&w=600", imgPlated: "https://images.unsplash.com/photo-1541518763179-0e34e424fb23?auto=format&fit=crop&q=80&w=600", tags: ["Vegan"], desc: "Çıtır falafel, pancarlı humus, roka, tahin sos.", ingredients: "Ev yapımı falafel topları, pancarlı humus, bebek roka, çeri domates, tahin sos.", macros: { protein: "15g", carbs: "40g", fat: "14g" } },
-      { id: 105, cat: "Bowl", name: "Mexican Fiesta", price: 220, kcal: 550, isPopular: false, imgPackaged: "https://images.unsplash.com/photo-1582499814723-22442273e626?auto=format&fit=crop&q=80&w=600", imgPlated: "https://images.unsplash.com/photo-1585238342024-78d387f4a707?auto=format&fit=crop&q=80&w=600", tags: ["Acılı", "Vejeteryan"], desc: "Siyah fasulye, mısır, jalapeno, guacamole, salsa.", ingredients: "Meksika fasulyesi, mısır, jalapeno turşusu, guacamole, domates salsa, esmer pirinç.", macros: { protein: "18g", carbs: "60g", fat: "20g" } },
-      { id: 106, cat: "Bowl", name: "Köfte & Karabuğday", price: 215, kcal: 450, isPopular: true, imgPackaged: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&q=80&w=600", imgPlated: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&q=80&w=600", tags: ["Yüksek Protein"], desc: "Izgara köfte, karabuğday, cacık sos, köz biber.", ingredients: "Dana ızgara köfte, haşlanmış karabuğday, süzme yoğurt, kapya biber.", macros: { protein: "28g", carbs: "35g", fat: "15g" } },
-      { id: 201, cat: "Salata", name: "Sezar Klasik", price: 170, kcal: 350, isPopular: true, imgPackaged: "https://images.unsplash.com/photo-1550304943-4f24f54ddde9?auto=format&fit=crop&q=80&w=600", imgPlated: "https://images.unsplash.com/photo-1620917670397-a331343d3c64?auto=format&fit=crop&q=80&w=600", tags: ["Klasik"], desc: "Roman marulu, parmesan, kruton, sezar sos.", ingredients: "Taze roman marulu, parmesan peyniri rendesi, fırınlanmış kruton ekmekler, özel sezar sos.", macros: { protein: "12g", carbs: "25g", fat: "22g" } },
-      { id: 202, cat: "Salata", name: "Tulum Peynirli", price: 160, kcal: 280, imgPackaged: "https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&q=80&w=600", imgPlated: "https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&q=80&w=600", tags: ["Vejeteryan"], desc: "Roka, tulum peyniri, ceviz, nar ekşisi.", ingredients: "Taze roka, İzmir tulum peyniri, ceviz içi, kurutulmuş domates, nar ekşisi sosu.", macros: { protein: "14g", carbs: "10g", fat: "18g" } },
-      { id: 203, cat: "Salata", name: "Asya Çıtır", price: 185, kcal: 320, imgPackaged: "https://images.unsplash.com/photo-1625943553852-781c6dd46faa?auto=format&fit=crop&q=80&w=600", imgPlated: "https://images.unsplash.com/photo-1606757365690-3423421c933c?auto=format&fit=crop&q=80&w=600", tags: ["Vegan"], desc: "Lahana, havuç, yer fıstığı, zencefilli sos.", ingredients: "Kırmızı ve beyaz lahana, rendelenmiş havuç, kavrulmuş yer fıstığı, edamame.", macros: { protein: "10g", carbs: "20g", fat: "15g" } },
-      { id: 204, cat: "Salata", name: "Ton Balıklı", price: 195, kcal: 400, isPopular: false, imgPackaged: "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?auto=format&fit=crop&q=80&w=600", imgPlated: "https://images.unsplash.com/photo-1570560258879-af7f8e1447ac?auto=format&fit=crop&q=80&w=600", tags: ["Yüksek Protein"], desc: "Ton balığı, yumurta, mısır, dereotu.", ingredients: "Yağı süzülmüş ton balığı, haşlanmış yumurta, süt mısır, dereotu, göbek marul.", macros: { protein: "35g", carbs: "15g", fat: "18g" } },
-      { id: 205, cat: "Salata", name: "Yeşil Detoks", price: 165, kcal: 250, imgPackaged: "https://images.unsplash.com/photo-1515543237350-b3eea1ec8082?auto=format&fit=crop&q=80&w=600", imgPlated: "https://images.unsplash.com/photo-1589302168068-964664d93dc0?auto=format&fit=crop&q=80&w=600", tags: ["Diyet", "Vegan"], desc: "Ispanak, yeşil elma, kereviz sapı, limon sos.", ingredients: "Bebek ıspanak, dilimlenmiş yeşil elma, kereviz sapı, salatalık, maydanoz, limon sosu.", macros: { protein: "5g", carbs: "25g", fat: "8g" } },
-      { id: 301, cat: "Wrap", name: "Hindi Füme", price: 160, kcal: 380, isPopular: true, imgPackaged: "https://images.unsplash.com/photo-1626700051175-6818013e1d4f?auto=format&fit=crop&q=80&w=600", imgPlated: "https://images.unsplash.com/photo-1625937329053-2db3839846c8?auto=format&fit=crop&q=80&w=600", tags: ["Yüksek Protein"], desc: "Tam buğday lavaş, hindi füme, labne.", ingredients: "Tam buğday unlu lavaş, hindi füme dilimleri, labne peyniri, marul, salatalık.", macros: { protein: "25g", carbs: "40g", fat: "12g" } },
-      { id: 302, cat: "Wrap", name: "Falafel Dürüm", price: 150, kcal: 340, imgPackaged: "https://images.unsplash.com/photo-1564834724105-918b73d1b9e0?auto=format&fit=crop&q=80&w=600", imgPlated: "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?auto=format&fit=crop&q=80&w=600", tags: ["Vegan"], desc: "Falafel, humus, turşu, yeşillik (Tavuksuz).", ingredients: "Nohut falafel, ev yapımı humus, salatalık turşusu, maydanoz, lavaş.", macros: { protein: "12g", carbs: "50g", fat: "10g" } },
-      { id: 303, cat: "Wrap", name: "Acılı Karnabahar", price: 155, kcal: 320, imgPackaged: "https://images.unsplash.com/photo-1628840042765-356cda07504e?auto=format&fit=crop&q=80&w=600", imgPlated: "https://images.unsplash.com/photo-1625937329053-2db3839846c8?auto=format&fit=crop&q=80&w=600", tags: ["Vejeteryan", "Acılı"], desc: "Baharatlı karnabahar, yoğurt sos, marul.", ingredients: "Fırınlanmış acı soslu karnabahar, süzme yoğurt sos, marul, lavaş.", macros: { protein: "8g", carbs: "35g", fat: "14g" } },
-      { id: 304, cat: "Wrap", name: "Tavuk Sezar Wrap", price: 165, kcal: 400, imgPackaged: "https://images.unsplash.com/photo-1565299585323-38d6b0865b47?auto=format&fit=crop&q=80&w=600", imgPlated: "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?auto=format&fit=crop&q=80&w=600", tags: ["Yüksek Protein"], desc: "Izgara tavuk, parmesan, sezar sos.", ingredients: "Izgara tavuk dilimleri, parmesan peyniri, sezar sos, marul, lavaş.", macros: { protein: "30g", carbs: "30g", fat: "18g" } },
-      { id: 305, cat: "Wrap", name: "Thai Sebzeli", price: 160, kcal: 360, imgPackaged: "https://images.unsplash.com/photo-1559563362-c667ba5f5480?auto=format&fit=crop&q=80&w=600", imgPlated: "https://images.unsplash.com/photo-1625937329053-2db3839846c8?auto=format&fit=crop&q=80&w=600", tags: ["Vegan"], desc: "Tofu, renkli biberler, yer fıstığı sosu.", ingredients: "Tofu, kırmızı ve sarı biber, taze soğan, yer fıstığı sosu, lavaş.", macros: { protein: "15g", carbs: "40g", fat: "16g" } },
-      { id: 401, cat: "Atıştırmalık", name: "Elma & Fıstık Ezmesi", price: 60, kcal: 190, imgPackaged: "https://images.unsplash.com/photo-1584559582128-b8be43b4342b?auto=format&fit=crop&q=80&w=600", imgPlated: "https://images.unsplash.com/photo-1576675784432-994941412b3d?auto=format&fit=crop&q=80&w=600", tags: ["Vegan"], desc: "Yeşil elma dilimleri, şekersiz fıstık ezmesi.", ingredients: "Granny Smith elma, %100 şekersiz fıstık ezmesi.", macros: { protein: "6g", carbs: "20g", fat: "10g" } },
-      { id: 402, cat: "Atıştırmalık", name: "Humus & Kraker", price: 70, kcal: 240, imgPackaged: "https://images.unsplash.com/photo-1584559582128-b8be43b4342b?auto=format&fit=crop&q=80&w=600", imgPlated: "https://images.unsplash.com/photo-1577805947697-89e18249d767?auto=format&fit=crop&q=80&w=600", tags: ["Vegan"], desc: "Ev yapımı humus, tam tahıllı kraker.", ingredients: "Nohut, tahin, limon, zeytinyağı, tam buğday kraker.", macros: { protein: "8g", carbs: "30g", fat: "12g" } },
-      { id: 403, cat: "Atıştırmalık", name: "Protein Topları", price: 55, kcal: 180, imgPackaged: "https://images.unsplash.com/photo-1584559582128-b8be43b4342b?auto=format&fit=crop&q=80&w=600", imgPlated: "https://images.unsplash.com/photo-1604382354936-07c5d9983bd3?auto=format&fit=crop&q=80&w=600", tags: ["Yüksek Protein"], desc: "Hurma, kakao, fındık topları.", ingredients: "Hurma püresi, kakao, fındık parçaları, whey protein tozu.", macros: { protein: "10g", carbs: "20g", fat: "8g" } },
-      { id: 404, cat: "Atıştırmalık", name: "Chia Puding", price: 90, kcal: 220, isPopular: true, imgPackaged: "https://images.unsplash.com/photo-1579353977828-2a4eab54c8fa?auto=format&fit=crop&q=80&w=600", imgPlated: "https://images.unsplash.com/photo-1584559582128-b8be43b4342b?auto=format&fit=crop&q=80&w=600", tags: ["Tatlı", "Vegan"], desc: "Hindistan cevizi sütü, chia, meyve.", ingredients: "Hindistan cevizi sütü, chia tohumu, agave şurubu, orman meyveleri.", macros: { protein: "6g", carbs: "25g", fat: "12g" } },
-      { id: 405, cat: "Atıştırmalık", name: "Çiğ Kuruyemiş", price: 80, kcal: 260, imgPackaged: "https://images.unsplash.com/photo-1584559582128-b8be43b4342b?auto=format&fit=crop&q=80&w=600", imgPlated: "https://images.unsplash.com/photo-1505576391880-b3f9d713dc4f?auto=format&fit=crop&q=80&w=600", tags: ["Vegan"], desc: "Badem, kaju, ceviz karışımı.", ingredients: "Çiğ badem, çiğ kaju, ceviz içi.", macros: { protein: "10g", carbs: "8g", fat: "22g" } },
-      { id: 501, cat: "İçecek", name: "Green Juice", price: 85, kcal: 110, isPopular: true, imgPackaged: "https://images.unsplash.com/photo-1610970881699-44a5587cabec?auto=format&fit=crop&q=80&w=600", imgPlated: "https://images.unsplash.com/photo-1610970881699-44a5587cabec?auto=format&fit=crop&q=80&w=600", tags: ["Detox"], desc: "Ispanak, elma, limon, zencefil suyu.", ingredients: "Soğuk sıkım ıspanak, yeşil elma, salatalık, limon, zencefil.", macros: { protein: "2g", carbs: "26g", fat: "0g" } },
-      { id: 502, cat: "İçecek", name: "Kombucha", price: 90, kcal: 40, imgPackaged: "https://images.unsplash.com/photo-1622597467961-f052d33a9080?auto=format&fit=crop&q=80&w=600", imgPlated: "https://images.unsplash.com/photo-1622597467961-f052d33a9080?auto=format&fit=crop&q=80&w=600", tags: ["Probiyotik"], desc: "Doğal fermente çay.", ingredients: "Fermante siyah çay, şeker, probiyotik kültür.", macros: { protein: "0g", carbs: "10g", fat: "0g" } },
-      { id: 503, cat: "İçecek", name: "Zencefil Shot", price: 55, kcal: 20, imgPackaged: "https://images.unsplash.com/photo-1600271886742-f049cd451bba?auto=format&fit=crop&q=80&w=600", imgPlated: "https://images.unsplash.com/photo-1600271886742-f049cd451bba?auto=format&fit=crop&q=80&w=600", tags: ["Bağışıklık"], desc: "%100 zencefil ve limon suyu.", ingredients: "Taze zencefil suyu, limon suyu, zerdeçal, karabiber.", macros: { protein: "0g", carbs: "5g", fat: "0g" } },
-      { id: 504, cat: "İçecek", name: "Cold Brew", price: 80, kcal: 5, imgPackaged: "https://images.unsplash.com/photo-1517701550927-30cf4ba1dba5?auto=format&fit=crop&q=80&w=600", imgPlated: "https://images.unsplash.com/photo-1517701550927-30cf4ba1dba5?auto=format&fit=crop&q=80&w=600", tags: ["Kafein"], desc: "Soğuk demlenmiş kahve.", ingredients: "%100 Arabica kahve çekirdekleri, su.", macros: { protein: "0g", carbs: "1g", fat: "0g" } },
-      { id: 505, cat: "İçecek", name: "Su", price: 25, kcal: 0, imgPackaged: "https://images.unsplash.com/photo-1560714235-d145ba2f8109?auto=format&fit=crop&q=80&w=600", imgPlated: "https://images.unsplash.com/photo-1560714235-d145ba2f8109?auto=format&fit=crop&q=80&w=600", tags: [], desc: "Cam şişe kaynak suyu.", ingredients: "Doğal kaynak suyu.", macros: { protein: "0g", carbs: "0g", fat: "0g" } },
-  ];
-
-  const uploadMenu = async () => {
-    if (!confirm("Menüyü veritabanına yüklemek üzeresin. Bu işlemi sadece BİR KERE yapmalısın. Devam?")) return;
-    const menuRef = collection(db, "products");
-    let count = 0;
-    for (const item of FULL_MENU_DATA) {
-      await setDoc(doc(menuRef, item.id.toString()), item); 
-      count++;
+// --- 3. SEO VE TAKİP YÖNETİCİSİ ---
+const SeoAndAnalytics = () => {
+  useEffect(() => {
+    // Google Analytics
+    if (CONFIG.gaMeasurementId) {
+      ReactGA.initialize(CONFIG.gaMeasurementId);
+      ReactGA.send({ hitType: "pageview", page: window.location.pathname });
     }
-    alert(`${count} ürün başarıyla veritabanına yüklendi! Artık bu butonu koddan silebilirsin.`);
-  };
+    // Meta Pixel
+    if (CONFIG.facebookPixelId) {
+      import('react-facebook-pixel')
+        .then((x) => x.default.init(CONFIG.facebookPixelId))
+        .then((x) => x.default.pageView())
+        .catch(() => {});
+    }
+    // Hotjar
+    if (CONFIG.hotjarId) {
+        (function(h,o,t,j,a,r){
+            h.hj=h.hj||function(){(h.hj.q=h.hj.q||[]).push(arguments)};
+            h._hjSettings={hjid:CONFIG.hotjarId,hjsv:CONFIG.hotjarVersion};
+            a=o.getElementsByTagName('head')[0];
+            r=o.createElement('script');r.async=1;
+            r.src=t+h._hjSettings.hjid+j+h._hjSettings.hjsv;
+            a.appendChild(r);
+        })(window,document,'https://static.hotjar.com/c/hotjar-','.js?sv=');
+    }
+  }, []);
 
   return (
-    <button onClick={uploadMenu} className="fixed bottom-4 left-4 z-[999] bg-red-600 text-white p-4 rounded-full shadow-xl font-bold border-4 border-white hover:bg-red-700 transition-colors">
-      VERİTABANINI DOLDUR 🚀
-    </button>
+    <Helmet>
+      <title>BeeCup | Şehrin En Taze Molası</title>
+      <meta name="description" content="BeeCup akıllı otomatları ve mobil uygulaması ile şehrin en taze, sağlıklı ve lezzetli bowlları, salataları artık sana çok yakın. Sıra bekleme, QR ile al!" />
+      <meta name="keywords" content="BeeCup, sağlıklı yemek, bowl, salata, kanyon yemek, maslak yemek, otomat, akıllı otomat, taze gıda" />
+      <meta property="og:title" content="BeeCup | Doğal Lezzet, Anında Seninle." />
+      <meta property="og:description" content="Sıra beklemeden, 7/24 ulaşabileceğin şef imzalı sağlıklı kaseler BeeCup'ta." />
+      <meta property="og:image" content="https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&q=80&w=1200" />
+      <meta property="og:url" content="https://beecup.com.tr" />
+      <meta property="og:type" content="website" />
+    </Helmet>
   );
 };
 
-// --- 4. SABİT VERİLER (Sadece Görüntüleme İçin) ---
+// --- 4. SABİT VERİLER ---
 const IMAGES = { 
   heroBg: "https://images.unsplash.com/photo-1498837167922-ddd27525d352?auto=format&fit=crop&q=80&w=2000", 
   appMockup: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&q=80&w=800" 
@@ -316,7 +312,6 @@ const MenuSection = ({ onProductSelect }) => {
   const [loading, setLoading] = useState(true);
   const [activeCat, setActiveCat] = useState("Çok Sevilenler");
 
-  // Veriyi Firebase'den Çekme
   useEffect(() => {
     const fetchProducts = async () => {
       if (!db) return;
@@ -378,7 +373,6 @@ const MenuSection = ({ onProductSelect }) => {
                         <div className="relative h-56 rounded-xl overflow-hidden mb-4 bg-gray-100">
                             <img src={item.imgPackaged} className="absolute inset-0 w-full h-full object-cover transition-opacity duration-500 opacity-100 group-hover:opacity-0" alt={item.name} />
                             <img src={item.imgPlated} className="absolute inset-0 w-full h-full object-cover transition-opacity duration-500 opacity-0 group-hover:opacity-100" alt={item.name} />
-                            
                             {item.tags && <div className="absolute top-2 left-2 flex gap-1 z-20"><span className="bg-white/90 text-[10px] font-bold px-2 py-1 rounded">{item.tags[0]}</span></div>}
                         </div>
                         <div className="flex justify-between items-start mb-1">
@@ -692,21 +686,12 @@ const MainLayout = () => {
   const { currentView } = useAppContext();
   const [selectedProduct, setSelectedProduct] = useState(null);
   
-  useEffect(() => {
-    document.title = "BeeCup | Şehrin En Taze Molası";
-    const style = document.createElement('style');
-    style.innerHTML = `html { scroll-behavior: smooth; } .font-display { font-family: 'Outfit', sans-serif; }`;
-    document.head.appendChild(style);
-    // GA4 Sayfa Görüntüleme
-    if(CONFIG.gaMeasurementId) ReactGA.send({ hitType: "pageview", page: window.location.pathname });
-    return () => document.head.removeChild(style);
-  }, []);
-
   return (
     <div className="min-h-screen bg-[#F7F9F4] text-[#132A13]">
       <style>{`@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Outfit:wght@300;400;600;800&display=swap'); body { font-family: 'DM Sans', sans-serif; }`}</style>
       
       <Navbar />
+      <SeoAndAnalytics />
 
       {currentView === 'home' ? (
         <>
@@ -724,7 +709,6 @@ const MainLayout = () => {
       <AuthModal />
       <OfficeRequestModal />
       <LegalModal />
-      
       <AnimatePresence>
         {selectedProduct && <ProductDetailModal product={selectedProduct} onClose={() => setSelectedProduct(null)} />}
       </AnimatePresence>
@@ -733,9 +717,11 @@ const MainLayout = () => {
 };
 
 const App = () => (
-  <AppProvider>
-    <MainLayout />
-  </AppProvider>
+  <HelmetProvider>
+    <AppProvider>
+      <MainLayout />
+    </AppProvider>
+  </HelmetProvider>
 );
 
 export default App;
