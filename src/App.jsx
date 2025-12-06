@@ -17,11 +17,11 @@ import AppPage from './pages/AppPage';
 import Profile from './pages/Profile';
 
 // 👇 DİKKAT: Süslü parantez YOK. Çünkü AdminPage.jsx "export default" kullanıyor.
-import AdminPage from './pages/AdminPage'; 
+import AdminPage from './pages/AdminPage';
 
 const SeoAndAnalytics = () => {
   const location = useLocation();
-  
+
   useEffect(() => {
     window.scrollTo(0, 0);
     if (CONFIG.gaMeasurementId) {
@@ -37,6 +37,8 @@ const SeoAndAnalytics = () => {
   );
 };
 
+import ChatWidget from './components/ChatWidget';
+
 const MainLayout = () => {
   return (
     <div className="min-h-screen bg-[#F7F9F4] text-[#132A13] font-sans">
@@ -46,6 +48,7 @@ const MainLayout = () => {
       <AuthModal />
       <OfficeRequestModal />
       <LegalModal />
+      <ChatWidget />
 
       <Routes>
         <Route path="/" element={<Home />} />
@@ -53,7 +56,7 @@ const MainLayout = () => {
         <Route path="/uygulama" element={<AppPage />} />
         <Route path="/beebul" element={<LocationsPage />} />
         <Route path="/profil" element={<Profile />} />
-        
+
         {/* Admin Rotası */}
         <Route path="/admin" element={<AdminPage />} />
       </Routes>
