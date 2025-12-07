@@ -15,7 +15,8 @@ import {
     setPersistence,
     browserSessionPersistence,
     GoogleAuthProvider,     // <-- EKLENDİ: Google Girişi için
-    signInWithPopup         // <-- EKLENDİ: Google Popup için
+    signInWithRedirect,     // <-- EKLENDİ: Google Redirect için
+    GoogleAuthProvider
 } from 'firebase/auth';
 import { addDoc, collection } from 'firebase/firestore';
 import emailjs from '@emailjs/browser';
@@ -36,14 +37,13 @@ export const AuthModal = () => {
         setLoading(true);
         setError('');
         try {
-            // Async işlem (setPersistence) popup'ı bloklayabilir, bu yüzden kaldırıldı.
+            // Popup yerine REDIRECT kullanıyoruz (Mobil uyumluluğu için)
             const provider = new GoogleAuthProvider();
-            await signInWithPopup(auth, provider);
-            setAuthModalType(null); // Başarılıysa kapat
+            await signInWithRedirect(auth, provider);
+            // Sayfa yenileneceği için modal'ı kapatmaya gerek yok, dönüşte AppContext yakalayacak
         } catch (e) {
             console.error(e);
-            setError("Google ile giriş yapılırken bir sorun oluştu.");
-        } finally {
+            setError("Google ile giriş başlatılamadı: " + e.message);
             setLoading(false);
         }
     };
