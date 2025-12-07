@@ -15,8 +15,7 @@ import {
     setPersistence,
     browserSessionPersistence,
     GoogleAuthProvider,     // <-- EKLENDİ: Google Girişi için
-    signInWithRedirect,     // <-- EKLENDİ: Google Redirect için
-    GoogleAuthProvider
+    signInWithRedirect      // <-- EKLENDİ: Google Redirect için
 } from 'firebase/auth';
 import { addDoc, collection } from 'firebase/firestore';
 import emailjs from '@emailjs/browser';
