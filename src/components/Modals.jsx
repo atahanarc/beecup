@@ -14,8 +14,8 @@ import {
     sendPasswordResetEmail,
     setPersistence,
     browserSessionPersistence,
-    GoogleAuthProvider,     // <-- EKLENDİ: Google Girişi için
-    signInWithRedirect      // <-- EKLENDİ: Google Redirect için
+    GoogleAuthProvider,
+    signInWithPopup      // <-- GÜNCELLENDİ: Tekrar Popup metoduna geçildi
 } from 'firebase/auth';
 import { addDoc, collection } from 'firebase/firestore';
 import emailjs from '@emailjs/browser';
@@ -36,13 +36,28 @@ export const AuthModal = () => {
         setLoading(true);
         setError('');
         try {
-            // Popup yerine REDIRECT kullanıyoruz (Mobil uyumluluğu için)
             const provider = new GoogleAuthProvider();
-            await signInWithRedirect(auth, provider);
-            // Sayfa yenileneceği için modal'ı kapatmaya gerek yok, dönüşte AppContext yakalayacak
+            // Tarayıcı dilini kullan
+            auth.useDeviceLanguage();
+
+            // Popup Metodu: Hem PC hem Mobilde (doğru tetiklenirse) çalışır
+            const result = await signInWithPopup(auth, provider);
+            console.log("Google ile giriş yapıldı:", result.user.email);
+
+            // Başarılı giriş sonrası modalı kapat
+            setAuthModalType(null);
         } catch (e) {
-            console.error(e);
-            setError("Google ile giriş başlatılamadı: " + e.message);
+            console.error("Google Login Error:", e);
+            let msg = "Google ile giriş başarısız.";
+            if (e.code === 'auth/popup-blocked') {
+                msg = "Tarayıcınız açılır pencereyi (pop-up) engelledi. Lütfen izin verip tekrar deneyin.";
+            } else if (e.code === 'auth/popup-closed-by-user') {
+                msg = "Giriş işlemini iptal ettiniz.";
+            } else if (e.message) {
+                msg = e.message;
+            }
+            setError(msg);
+        } finally {
             setLoading(false);
         }
     };

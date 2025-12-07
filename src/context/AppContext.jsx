@@ -1,6 +1,6 @@
 // src/context/AppContext.jsx
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { onAuthStateChanged, getRedirectResult } from 'firebase/auth';
+import { onAuthStateChanged } from 'firebase/auth';
 // Auth ve DB'yi santralden (firebase.js) çekiyoruz
 import { auth, db } from '../firebase';
 
@@ -10,7 +10,7 @@ export const CONFIG = {
   instagramLink: "https://www.instagram.com/beecupco/#",
 
   // ESKİSİ: logoUrl: "/logo.jpg",
-  // YENİSİ (Bunu yapıştır):
+  // YENİSİ:
   logoUrl: "/logo.png",
 
   emailJs: {
@@ -32,21 +32,8 @@ export const AppProvider = ({ children }) => {
   const [legalModalType, setLegalModalType] = useState(null);
 
   useEffect(() => {
-    // Google Redirect Dönüşünü Kontrol Et
-    getRedirectResult(auth)
-      .then((result) => {
-        if (result) {
-          console.log("Google Login Başarılı:", result.user.displayName);
-          // Gerekirse burada özel bir "Hoş geldin" tostu gösterilebilir
-        }
-      })
-      .catch((error) => {
-        console.error("Google Login Hatası:", error);
-        alert("Giriş başarısız oldu: " + error.message);
-      });
-
+    // Sadece Auth Durumunu Dinle
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      console.log("Auth Durumu:", currentUser);
       setUser(currentUser);
     });
     return () => unsubscribe();

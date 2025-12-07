@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Package } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const StockList = ({ inventory, locationName }) => {
+const StockList = ({ inventory, locationName, onProductClick }) => {
     const [selectedCategory, setSelectedCategory] = useState("Tümü");
 
     // Otomatikteki mevcut kategorileri bul
@@ -13,10 +13,12 @@ const StockList = ({ inventory, locationName }) => {
     }, [inventory]);
 
     // Seçili kategoriye göre filtrele
+    // Seçili kategoriye göre filtrele (Sadece STOK > 0 olanlar)
     const filteredItems = useMemo(() => {
         if (!inventory) return [];
-        if (selectedCategory === "Tümü") return inventory;
-        return inventory.filter(item => item.category === selectedCategory);
+        const activeItems = inventory.filter(item => item.count > 0);
+        if (selectedCategory === "Tümü") return activeItems;
+        return activeItems.filter(item => item.category === selectedCategory);
     }, [inventory, selectedCategory]);
 
     if (!inventory || inventory.length === 0) return null;
@@ -86,7 +88,8 @@ const StockList = ({ inventory, locationName }) => {
                                 return (
                                     <div
                                         key={index}
-                                        className={`relative p-2.5 rounded-lg border border-gray-100 shadow-sm flex flex-col justify-between h-20 ${bgClass} hover:ring-1 ${ringColor} transition-all`}
+                                        onClick={(e) => { e.stopPropagation(); onProductClick && onProductClick(item); }}
+                                        className={`relative p-2.5 rounded-lg border border-gray-100 shadow-sm flex flex-col justify-between h-20 ${bgClass} hover:ring-1 ${ringColor} transition-all cursor-pointer`}
                                     >
                                         <div>
                                             <h5 className="text-xs font-bold text-[#132A13] leading-tight line-clamp-2">

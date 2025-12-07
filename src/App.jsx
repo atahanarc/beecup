@@ -2,6 +2,7 @@ import React, { useEffect } from 'react';
 import { Routes, Route, useLocation } from 'react-router-dom';
 import { Helmet, HelmetProvider } from 'react-helmet-async';
 import { AppProvider, CONFIG } from './context/AppContext';
+import { LocationProvider } from './context/LocationContext';
 import ReactGA from "react-ga4";
 
 // --- BİLEŞENLER ---
@@ -69,10 +70,14 @@ const MainLayout = () => {
   );
 };
 
+
+
 const App = () => (
   <HelmetProvider>
     <AppProvider>
-      <MainLayout />
+      <LocationProvider>
+        <MainLayout />
+      </LocationProvider>
     </AppProvider>
   </HelmetProvider>
 );

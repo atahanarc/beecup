@@ -1,16 +1,19 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MapPin, Loader2, Info, Search, Smartphone, MessageSquare } from 'lucide-react';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import StoreMap from './StoreMap';
 import StockList from './StockList';
 import { useAppContext } from '../context/AppContext';
+import { AnimatePresence } from 'framer-motion';
+import ProductDetailModal from './ProductDetailModal';
 
 const Locations = ({ showFooterPromos = false }) => {
     const { setIsFeedbackModalOpen } = useAppContext();
     const [locations, setLocations] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedLocation, setSelectedLocation] = useState(null); // Haritada odaklanılan
+    const [viewProduct, setViewProduct] = useState(null);
 
     // Filtreleme State'leri
 
@@ -34,48 +37,42 @@ const Locations = ({ showFooterPromos = false }) => {
         const fetchLocations = async () => {
             if (!db) return;
             try {
+                // 1. Ürünleri Çek (Gerçek Veri)
+                const productsSnap = await getDocs(collection(db, "products"));
+                const productsList = productsSnap.docs.map(d => ({
+                    id: d.id,
+                    ...d.data(),
+                    category: d.data().cat || "Diğer" // StockList 'category' bekliyor
+                }));
+
+                // 2. Lokasyonları Çek
                 const snapshot = await getDocs(collection(db, "locations"));
-                const data = snapshot.docs.map(doc => {
-                    // MOCK STOCK DATA (20+ Ürün Simülasyonu)
-                    const allProducts = [
-                        { name: "Somonlu Bowl", category: "Bowl" },
-                        { name: "Acai Bowl", category: "Bowl" },
-                        { name: "Falafel Bowl", category: "Bowl" },
-                        { name: "Meksika Bowl", category: "Bowl" },
-                        { name: "Fıstık Ezmeli Wrap", category: "Wrap" },
-                        { name: "Humuslu Wrap", category: "Wrap" },
-                        { name: "Ton Balıklı Wrap", category: "Wrap" },
-                        { name: "Sezar Wrap", category: "Wrap" },
-                        { name: "Akdeniz Salata", category: "Salata" },
-                        { name: "Kinoa Salata", category: "Salata" },
-                        { name: "Izgara Tavuk Salata", category: "Salata" },
-                        { name: "Detoks Suyu (Yeşil)", category: "İçecek" },
-                        { name: "Detoks Suyu (Kırmızı)", category: "İçecek" },
-                        { name: "Cold Brew Kahve", category: "İçecek" },
-                        { name: "Ev Yapımı Limonata", category: "İçecek" },
-                        { name: "Protein Bar", category: "Atıştırmalık" },
-                        { name: "Yulaflı Kurabiye", category: "Atıştırmalık" },
-                        { name: "Meyve Salatası", category: "Atıştırmalık" },
-                        { name: "Chia Puding", category: "Atıştırmalık" }
-                    ];
 
-                    const getRandomInventory = () => {
-                        const shuffled = [...allProducts].sort(() => 0.5 - Math.random());
-                        const selected = shuffled.slice(0, Math.floor(Math.random() * 6) + 12);
-                        return selected.map(item => ({
-                            ...item,
-                            count: Math.random() > 0.8 ? 0 : Math.floor(Math.random() * 8) + 1
-                        }));
-                    };
+                // 3. Her lokasyonun stoğunu çek
+                // 3. Her lokasyonun stoğunu işle
+                const data = snapshot.docs.map(docSnap => {
+                    const locData = { id: docSnap.id, ...docSnap.data() };
 
-                    const mockInventory = getRandomInventory();
+                    // Mobil ile aynı: Inventory direkt doküman içinde
+                    const stockMap = locData.inventory || {};
+
+                    // Ürün listesini stok bilgisiyle birleştir
+                    const realInventory = productsList.map(p => ({
+                        ...p,
+                        count: stockMap[p.id] !== undefined ? stockMap[p.id] : 0,
+                    }));
+
+                    // Toplam stok durumu
+                    const totalStock = realInventory.reduce((acc, item) => acc + item.count, 0);
+                    const stockStatus = totalStock > 10 ? 'Dolu' : (totalStock > 0 ? 'Azaldı' : 'Boş');
 
                     return {
-                        id: doc.id,
-                        ...doc.data(),
-                        inventory: mockInventory
+                        ...locData,
+                        inventory: realInventory,
+                        stockStatus
                     };
                 });
+
                 setLocations(data);
             } catch (error) {
                 console.error("Lokasyon hatası:", error);
@@ -180,7 +177,7 @@ const Locations = ({ showFooterPromos = false }) => {
                                             <p className="text-xs text-gray-500 mb-2 line-clamp-2">{loc.description}</p>
 
                                             {selectedLocation?.id === loc.id ? (
-                                                <StockList inventory={loc.inventory} locationName={loc.name} />
+                                                <StockList inventory={loc.inventory} locationName={loc.name} onProductClick={setViewProduct} />
                                             ) : loc.stockStatus && (
                                                 <div className="flex items-center gap-2 pt-3 border-t border-gray-100">
                                                     <div className={`w-2 h-2 rounded-full ${loc.stockStatus === 'Dolu' ? 'bg-green-500' : 'bg-orange-500'}`}></div>
@@ -244,6 +241,10 @@ const Locations = ({ showFooterPromos = false }) => {
                     </div>
                 )}
             </div>
+
+            <AnimatePresence>
+                {viewProduct && <ProductDetailModal product={viewProduct} onClose={() => setViewProduct(null)} />}
+            </AnimatePresence>
         </section>
     );
 };

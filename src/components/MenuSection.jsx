@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 import { collection, getDocs, query } from 'firebase/firestore';
 import { db } from '../firebase';
+import { useStoreLocation } from '../context/LocationContext';
 
 const MenuSection = ({ onProductSelect }) => {
+  const { inventory, activeLocation } = useStoreLocation();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -77,24 +79,34 @@ const MenuSection = ({ onProductSelect }) => {
           <div className="flex justify-center py-20"><Loader2 className="animate-spin text-[#4F772D]" size={48} /></div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {filteredItems.map(item => (
-              <div
-                key={item.id}
-                // 👇 KRİTİK NOKTA: Burası olmazsa Modal açılmaz
-                onClick={() => onProductSelect && onProductSelect(item)}
-                className="bg-white rounded-2xl p-4 shadow-sm border border-transparent hover:border-[#90A955] transition-all cursor-pointer group hover:shadow-xl"
-              >
-                <div className="relative h-56 rounded-xl overflow-hidden mb-4 bg-gray-100">
-                  <img src={item.imgPackaged} className="absolute inset-0 w-full h-full object-cover group-hover:opacity-0 transition-opacity duration-500" alt={item.name} />
-                  <img src={item.imgPlated} className="absolute inset-0 w-full h-full object-cover opacity-0 group-hover:opacity-100 transition-opacity duration-500" alt={item.name} />
+            {filteredItems.map(item => {
+              const stock = activeLocation && inventory ? inventory[item.id] : 999;
+              const isOutOfStock = activeLocation && stock !== undefined && stock <= 0;
+
+              return (
+                <div
+                  key={item.id}
+                  onClick={() => !isOutOfStock && onProductSelect && onProductSelect(item)}
+                  className={`bg-white rounded-2xl p-4 shadow-sm border border-transparent transition-all group hover:shadow-xl relative ${isOutOfStock ? 'opacity-60 grayscale pointer-events-none' : 'hover:border-[#90A955] cursor-pointer'}`}
+                >
+                  <div className="relative h-56 rounded-xl overflow-hidden mb-4 bg-gray-100">
+                    <img src={item.imgPackaged} className="absolute inset-0 w-full h-full object-cover group-hover:opacity-0 transition-opacity duration-500" alt={item.name} />
+                    <img src={item.imgPlated} className="absolute inset-0 w-full h-full object-cover opacity-0 group-hover:opacity-100 transition-opacity duration-500" alt={item.name} />
+
+                    {isOutOfStock && (
+                      <div className="absolute inset-0 bg-black/40 z-10 flex items-center justify-center">
+                        <span className="bg-red-600 text-white font-bold px-4 py-2 rounded-xl transform -rotate-12 border-2 border-white shadow-lg">TÜKENDİ</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex justify-between items-start mb-1">
+                    <h3 className="font-bold text-[#132A13] text-lg leading-tight">{item.name}</h3>
+                    <span className="font-bold text-[#4F772D] text-lg bg-green-50 px-2 py-1 rounded-lg">₺{item.price}</span>
+                  </div>
+                  <p className="text-xs text-gray-500 line-clamp-2">{item.desc}</p>
                 </div>
-                <div className="flex justify-between items-start mb-1">
-                  <h3 className="font-bold text-[#132A13] text-lg leading-tight">{item.name}</h3>
-                  <span className="font-bold text-[#4F772D] text-lg bg-green-50 px-2 py-1 rounded-lg">₺{item.price}</span>
-                </div>
-                <p className="text-xs text-gray-500 line-clamp-2">{item.desc}</p>
-              </div>
-            ))}
+              )
+            })}
           </div>
         )}
       </div>
