@@ -4,11 +4,40 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Harita marker düzeltmesi */
+.gmnoprint img {
+  max-width: none !important;
+  visibility: visible !important;
+}
+
 body {
   background-color: #F9F8F4;
   color: #183028;
   font-family: 'DM Sans', sans-serif;
 }
 
-/* Scrollbar Gizle */
-::-webkit-scrollbar { display: none; }
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #4F772D;
+  border-radius: 20px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: #3d5e22;
+}
+
+/* Firefox için Scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #4F772D transparent;
+}

@@ -2,17 +2,17 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { onAuthStateChanged } from 'firebase/auth';
 // Auth ve DB'yi santralden (firebase.js) çekiyoruz
-import { auth, db } from '../firebase'; 
+import { auth, db } from '../firebase';
 
 // Ayarlar
 export const CONFIG = {
   adminEmail: "info@beecupco.com",
   instagramLink: "https://www.instagram.com/beecupco/#",
-  
+
   // ESKİSİ: logoUrl: "/logo.jpg",
   // YENİSİ (Bunu yapıştır):
-  logoUrl: "/logo.png", 
-  
+  logoUrl: "/logo.png",
+
   emailJs: {
     serviceId: "service_5nludkm",
     templateWelcome: "template_7fj3mce",
@@ -28,6 +28,7 @@ export const AppProvider = ({ children }) => {
   const [authModalType, setAuthModalType] = useState(null);
   const [currentView, setCurrentView] = useState('home');
   const [isOfficeModalOpen, setIsOfficeModalOpen] = useState(false);
+  const [isFeedbackModalOpen, setIsFeedbackModalOpen] = useState(false);
   const [legalModalType, setLegalModalType] = useState(null);
 
   useEffect(() => {
@@ -39,11 +40,12 @@ export const AppProvider = ({ children }) => {
   }, []);
 
   return (
-    <AppContext.Provider value={{ 
-      user, setUser, 
+    <AppContext.Provider value={{
+      user, setUser,
       authModalType, setAuthModalType,
       currentView, setCurrentView,
       isOfficeModalOpen, setIsOfficeModalOpen,
+      isFeedbackModalOpen, setIsFeedbackModalOpen,
       legalModalType, setLegalModalType
     }}>
       {children}

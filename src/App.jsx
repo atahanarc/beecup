@@ -7,7 +7,7 @@ import ReactGA from "react-ga4";
 // --- BİLEŞENLER ---
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
-import { AuthModal, OfficeRequestModal, LegalModal } from './components/Modals';
+import { AuthModal, OfficeRequestModal, LegalModal, FeedbackModal } from './components/Modals';
 
 // --- SAYFALAR ---
 import Home from './pages/Home';
@@ -47,19 +47,22 @@ const MainLayout = () => {
 
       <AuthModal />
       <OfficeRequestModal />
+      <FeedbackModal />
       <LegalModal />
       <ChatWidget />
 
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/menu" element={<MenuPage />} />
-        <Route path="/uygulama" element={<AppPage />} />
-        <Route path="/beebul" element={<LocationsPage />} />
-        <Route path="/profil" element={<Profile />} />
+      <main className="flex-grow pt-0">
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/menu" element={<MenuPage />} />
+          <Route path="/uygulama" element={<AppPage />} />
+          <Route path="/beebul" element={<LocationsPage />} />
+          <Route path="/profil" element={<Profile />} />
 
-        {/* Admin Rotası */}
-        <Route path="/admin" element={<AdminPage />} />
-      </Routes>
+          {/* Admin Rotası */}
+          <Route path="/admin" element={<AdminPage />} />
+        </Routes>
+      </main>
 
       <Footer />
     </div>

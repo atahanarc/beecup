@@ -7,7 +7,7 @@ import { sendMessageToGemini } from '../services/aiService';
 const ChatWidget = () => {
     const [isOpen, setIsOpen] = useState(false);
     const [messages, setMessages] = useState([
-        { id: 1, text: "Selam! 👋 Ben BeeCup Asistan. Sana nasıl yardımcı olabilirim? Hangi kahveyi seversin?", sender: 'bot' }
+        { id: 1, text: "Selam! 👋 Ben BeeCup Asistan. Sana nasıl yardımcı olabilirim? ", sender: 'bot' }
     ]);
     const [input, setInput] = useState("");
     const [loading, setLoading] = useState(false);
@@ -71,8 +71,8 @@ const ChatWidget = () => {
                             {messages.map((msg) => (
                                 <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
                                     <div className={`max-w-[80%] p-3 text-sm rounded-2xl ${msg.sender === 'user'
-                                            ? 'bg-[#4F772D] text-white rounded-tr-none'
-                                            : 'bg-white text-gray-700 shadow-sm border border-gray-100 rounded-tl-none'
+                                        ? 'bg-[#4F772D] text-white rounded-tr-none'
+                                        : 'bg-white text-gray-700 shadow-sm border border-gray-100 rounded-tl-none'
                                         }`}>
                                         {msg.text}
                                     </div>

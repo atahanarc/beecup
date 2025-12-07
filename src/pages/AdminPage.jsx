@@ -36,6 +36,7 @@ const AdminPage = () => {
 
     const locationInitial = {
         name: '', status: 'active', stockStatus: 'Yüksek', description: '',
+        city: 'İstanbul', district: 'Şişli',
         latitude: '', longitude: ''
     };
 
@@ -262,6 +263,58 @@ const AdminPage = () => {
                                             <input value={formData.stockStatus} onChange={e => setFormData({ ...formData, stockStatus: e.target.value })} className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-[#4F772D] focus:bg-white" placeholder="Yüksek" />
                                         </div>
                                     </div>
+                                    <div className="flex gap-4">
+                                        <div className="flex-1">
+                                            <label className="text-xs font-bold text-gray-500 uppercase ml-1 block mb-1">Şehir</label>
+                                            <select value={formData.city || 'İstanbul'} onChange={e => setFormData({ ...formData, city: e.target.value })} className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-[#4F772D] focus:bg-white cursor-pointer">
+                                                <option value="İstanbul">İstanbul</option>
+                                            </select>
+                                        </div>
+                                        <div className="flex-1">
+                                            <label className="text-xs font-bold text-gray-500 uppercase ml-1 block mb-1">İlçe</label>
+                                            <select value={formData.district || 'Şişli'} onChange={e => setFormData({ ...formData, district: e.target.value })} className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-[#4F772D] focus:bg-white cursor-pointer">
+                                                <option value="Adalar">Adalar</option>
+                                                <option value="Arnavutköy">Arnavutköy</option>
+                                                <option value="Ataşehir">Ataşehir</option>
+                                                <option value="Avcılar">Avcılar</option>
+                                                <option value="Bağcılar">Bağcılar</option>
+                                                <option value="Bahçelievler">Bahçelievler</option>
+                                                <option value="Bakırköy">Bakırköy</option>
+                                                <option value="Başakşehir">Başakşehir</option>
+                                                <option value="Bayrampaşa">Bayrampaşa</option>
+                                                <option value="Beşiktaş">Beşiktaş</option>
+                                                <option value="Beykoz">Beykoz</option>
+                                                <option value="Beylikdüzü">Beylikdüzü</option>
+                                                <option value="Beyoğlu">Beyoğlu</option>
+                                                <option value="Büyükçekmece">Büyükçekmece</option>
+                                                <option value="Çatalca">Çatalca</option>
+                                                <option value="Çekmeköy">Çekmeköy</option>
+                                                <option value="Esenler">Esenler</option>
+                                                <option value="Esenyurt">Esenyurt</option>
+                                                <option value="Eyüpsultan">Eyüpsultan</option>
+                                                <option value="Fatih">Fatih</option>
+                                                <option value="Gaziosmanpaşa">Gaziosmanpaşa</option>
+                                                <option value="Güngören">Güngören</option>
+                                                <option value="Kadıköy">Kadıköy</option>
+                                                <option value="Kağıthane">Kağıthane</option>
+                                                <option value="Kartal">Kartal</option>
+                                                <option value="Küçükçekmece">Küçükçekmece</option>
+                                                <option value="Maltepe">Maltepe</option>
+                                                <option value="Pendik">Pendik</option>
+                                                <option value="Sancaktepe">Sancaktepe</option>
+                                                <option value="Sarıyer">Sarıyer</option>
+                                                <option value="Silivri">Silivri</option>
+                                                <option value="Sultanbeyli">Sultanbeyli</option>
+                                                <option value="Sultangazi">Sultangazi</option>
+                                                <option value="Şile">Şile</option>
+                                                <option value="Şişli">Şişli</option>
+                                                <option value="Tuzla">Tuzla</option>
+                                                <option value="Ümraniye">Ümraniye</option>
+                                                <option value="Üsküdar">Üsküdar</option>
+                                                <option value="Zeytinburnu">Zeytinburnu</option>
+                                            </select>
+                                        </div>
+                                    </div>
                                     <div>
                                         <label className="text-xs font-bold text-gray-500 uppercase ml-1 block mb-1">Adres / Açıklama</label>
                                         <textarea rows="3" value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} className="w-full p-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-[#4F772D] focus:bg-white resize-none" placeholder="Kat 2, Food Court yanı..." />
@@ -342,7 +395,7 @@ const AdminPage = () => {
                 )}
 
             </div>
-        </div>
+        </div >
     );
 };
 
