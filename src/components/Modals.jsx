@@ -36,7 +36,7 @@ export const AuthModal = () => {
         setLoading(true);
         setError('');
         try {
-            await setPersistence(auth, browserSessionPersistence);
+            // Async işlem (setPersistence) popup'ı bloklayabilir, bu yüzden kaldırıldı.
             const provider = new GoogleAuthProvider();
             await signInWithPopup(auth, provider);
             setAuthModalType(null); // Başarılıysa kapat
