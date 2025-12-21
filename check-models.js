@@ -1,7 +1,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import fs from "fs";
 
-const API_KEY = "AIzaSyBMeBpCuooq7C3OaaRmxEC-Atay-mtGGww";
+const API_KEY = process.env.VITE_GEMINI_API_KEY || "YOUR_API_KEY_HERE";
 
 async function listModels() {
     console.log("Fetching available models...");
