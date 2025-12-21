@@ -347,9 +347,15 @@ const AdminPage = () => {
                                     </div>
                                 </div>
                                 <div className="space-y-5">
-                                    <div>
-                                        <label className="text-[10px] font-bold text-blue-500 uppercase ml-1">Resim Yolu</label>
-                                        <input value={formData.imgPackaged} onChange={e => setFormData({ ...formData, imgPackaged: e.target.value })} className="w-full p-2 bg-white border border-blue-200 rounded-lg text-sm" />
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label className="text-[10px] font-bold text-blue-500 uppercase ml-1">Paket Görseli</label>
+                                            <input value={formData.imgPackaged} onChange={e => setFormData({ ...formData, imgPackaged: e.target.value })} className="w-full p-2 bg-white border border-blue-200 rounded-lg text-sm" placeholder="/yemekler/paket.jpg" />
+                                        </div>
+                                        <div>
+                                            <label className="text-[10px] font-bold text-blue-500 uppercase ml-1">Tabak Görseli</label>
+                                            <input value={formData.imgPlated} onChange={e => setFormData({ ...formData, imgPlated: e.target.value })} className="w-full p-2 bg-white border border-blue-200 rounded-lg text-sm" placeholder="/yemekler/tabak.jpg" />
+                                        </div>
                                     </div>
                                     <div className="flex gap-2 items-center p-4 bg-yellow-50 rounded-xl border border-yellow-100 cursor-pointer" onClick={() => setFormData({ ...formData, isPopular: !formData.isPopular })}>
                                         <input type="checkbox" checked={formData.isPopular} onChange={() => { }} className="w-5 h-5 accent-[#4F772D]" />
