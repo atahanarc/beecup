@@ -3,6 +3,8 @@ import { db } from "../firebase";
 import { collection, getDocs } from "firebase/firestore";
 
 // API Anahtarını .env'den al
+// API Anahtarını .env'den al
+// Updated to gemini-2.0-flash
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 
 let genAI = null;
