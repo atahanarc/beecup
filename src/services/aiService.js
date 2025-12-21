@@ -13,7 +13,7 @@ export const initAI = () => {
     if (API_KEY) {
         genAI = new GoogleGenerativeAI(API_KEY);
         // Listeden kontrol ettik, hesabınızda bu model aktif:
-        model = genAI.getGenerativeModel({ model: "gemini-flash-latest" });
+        model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
     } else {
         console.error("Gemini API Key bulunamadı!");
     }
