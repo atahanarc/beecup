@@ -39,6 +39,7 @@ const MenuSection = ({ onProductSelect }) => {
     { id: "Salata", icon: "🥬", label: "Salata" },
     { id: "Wrap", icon: "🌯", label: "Wrap" },
     { id: "Atıştırmalık", icon: "🍎", label: "Atıştırmalık" },
+    { id: "İçecek", icon: "🥤", label: "İçecek" },
   ];
 
   const filteredItems = products.filter(item => {

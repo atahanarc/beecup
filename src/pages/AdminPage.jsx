@@ -5,9 +5,10 @@ import {
 } from 'lucide-react';
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc } from 'firebase/firestore';
 import { signOut, onAuthStateChanged } from 'firebase/auth';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage'; // YENİ: Storage fonksiyonları
 
 // --- SANTRAL BAĞLANTILARI ---
-import { db, auth } from '../firebase';
+import { db, auth, storage } from '../firebase'; // YENİ: Storage eklendi
 import { CONFIG } from '../context/AppContext';
 
 const AdminPage = () => {
@@ -81,6 +82,63 @@ const AdminPage = () => {
             console.error("Veri hatası:", error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    // --- RESİM YÜKLEME (OPTIMIZED) ---
+    const handleImageUpload = async (file, type) => {
+        if (!file) return null;
+
+        // 1. Resim Sıkıştırma Fonksiyonu
+        const compressImage = (file) => {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.src = event.target.result;
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const MAX_WIDTH = 1024; // Max genişlik 1024px
+                        const scaleSize = MAX_WIDTH / img.width;
+
+                        // Eğer resim zaten küçükse boyutlandırma
+                        canvas.width = scaleSize < 1 ? MAX_WIDTH : img.width;
+                        canvas.height = scaleSize < 1 ? img.height * scaleSize : img.height;
+
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+                        // JPEG Olarak %80 Kalite ile çıktı al
+                        canvas.toBlob((blob) => {
+                            resolve(blob);
+                        }, 'image/jpeg', 0.8);
+                    };
+                };
+            });
+        };
+
+        try {
+            // Sıkıştırılmış Blobu al
+            const compressedBlob = await compressImage(file);
+
+            // Dosya adı çakışmasın diye tarih ekliyoruz
+            const cleanName = file.name.replace(/[^a-zA-Z0-9.]/g, "_");
+            const fileName = `products/${Date.now()}_${type}_${cleanName}`;
+
+            // Storage referansı oluştur
+            const storageRef = ref(storage, fileName);
+
+            // Yükle (Blob olarak)
+            const snapshot = await uploadBytes(storageRef, compressedBlob);
+
+            // URL al
+            const downloadURL = await getDownloadURL(snapshot.ref);
+            return downloadURL;
+        } catch (error) {
+            console.error("Resim yükleme hatası:", error);
+            alert("Resim yüklenirken hata oluştu!");
+            return null;
         }
     };
 
@@ -350,11 +408,49 @@ const AdminPage = () => {
                                     <div className="grid grid-cols-2 gap-4">
                                         <div>
                                             <label className="text-[10px] font-bold text-blue-500 uppercase ml-1">Paket Görseli</label>
-                                            <input value={formData.imgPackaged} onChange={e => setFormData({ ...formData, imgPackaged: e.target.value })} className="w-full p-2 bg-white border border-blue-200 rounded-lg text-sm" placeholder="/yemekler/paket.jpg" />
+                                            <div className="flex flex-col gap-2">
+                                                <input
+                                                    type="file"
+                                                    accept="image/*"
+                                                    onChange={async (e) => {
+                                                        const file = e.target.files[0];
+                                                        if (!file) return;
+                                                        const url = await handleImageUpload(file, "packaged");
+                                                        if (url) setFormData(prev => ({ ...prev, imgPackaged: url }));
+                                                    }}
+                                                    className="text-xs text-gray-500 file:mr-2 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                                                />
+                                                {/* Önizleme veya Manuel URL */}
+                                                <input
+                                                    value={formData.imgPackaged}
+                                                    onChange={e => setFormData({ ...formData, imgPackaged: e.target.value })}
+                                                    className="w-full p-2 bg-white border border-gray-200 rounded-lg text-xs"
+                                                    placeholder="veya URL yapıştır..."
+                                                />
+                                            </div>
                                         </div>
                                         <div>
                                             <label className="text-[10px] font-bold text-blue-500 uppercase ml-1">Tabak Görseli</label>
-                                            <input value={formData.imgPlated} onChange={e => setFormData({ ...formData, imgPlated: e.target.value })} className="w-full p-2 bg-white border border-blue-200 rounded-lg text-sm" placeholder="/yemekler/tabak.jpg" />
+                                            <div className="flex flex-col gap-2">
+                                                <input
+                                                    type="file"
+                                                    accept="image/*"
+                                                    onChange={async (e) => {
+                                                        const file = e.target.files[0];
+                                                        if (!file) return;
+                                                        const url = await handleImageUpload(file, "plated");
+                                                        if (url) setFormData(prev => ({ ...prev, imgPlated: url }));
+                                                    }}
+                                                    className="text-xs text-gray-500 file:mr-2 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                                                />
+                                                {/* Önizleme veya Manuel URL */}
+                                                <input
+                                                    value={formData.imgPlated}
+                                                    onChange={e => setFormData({ ...formData, imgPlated: e.target.value })}
+                                                    className="w-full p-2 bg-white border border-gray-200 rounded-lg text-xs"
+                                                    placeholder="veya URL yapıştır..."
+                                                />
+                                            </div>
                                         </div>
                                     </div>
                                     <div className="flex gap-2 items-center p-4 bg-yellow-50 rounded-xl border border-yellow-100 cursor-pointer" onClick={() => setFormData({ ...formData, isPopular: !formData.isPopular })}>
